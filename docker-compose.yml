@@ -1,0 +1,76 @@
+# Use postgres/example user/password credentials
+# Resource: https://github.com/jdaarevalo/docker_postgres_with_data
+version: '3'
+services:
+  postgres_db:
+    image: postgres:15
+    container_name: posgresqlstorycontainer
+    # restart: always
+    environment:
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=postgres
+      - POSTGRES_DB=postgres
+      - PGDATA=/var/lib/postgresql/data/pgdata
+    logging:
+      options:
+        max-size: 10m
+        max-file: "3"
+    ports:
+      - '5438:5432'
+      # - '5432:5533'
+    volumes:
+      # - ./data:/var/lib/postgresql/data
+      - $PWD/postgres_database:/var/lib/postgresql/data
+      # Relevant resource: https://levelup.gitconnected.com/creating-and-filling-a-postgres-db-with-docker-compose-e1607f6f882f
+      # copy the sql script to create tables
+      # - ./sql/create_tables.sql:/docker-entrypoint-initdb.d/create_tables.sql
+      # copy the sql script to fill tables
+      # - ./sql/fill_tables.sql:/docker-entrypoint-initdb.d/fill_tables.sql
+      # - ./sql:/docker-entrypoint-initdb.d
+      # - ./docker-entrypoint-initdb.d:/docker-entrypoint-initdb.d
+      - $PWD/init_database/create_tables.sql:/docker-entrypoint-initdb.d/create_tables.sql
+      - $PWD/init_database/fill_tables.sql:/docker-entrypoint-initdb.d/fill_tables.sql
+      - $PWD/init_database/init-table.sql:/docker-entrypoint-initdb.d/init-table.sql
+      - $PWD/init_database/init-database-db.sh:/docker-entrypoint-initdb.d/init-database-db.sh
+
+  # https://github.com/robcowart/docker_compose_cookbook/blob/master/redis/docker-compose.yml
+  # https://geshan.com.np/blog/2022/01/redis-docker/
+  redis:
+    image: redis:7
+    container_name: redisstorycontainer
+    # restart: always # unless-stopped
+    # hostname: redis
+    # network_mode: bridge
+    ports:
+      - '6379:6379'
+      # - 6379:6379/tcp
+      # - '6379:6379'
+      # - '8001:8001'
+    # command: redis-server --save 20 1 --loglevel warning --requirepass eYVX7EwVmmxKPCDmwMtyKVge8oLd2t81
+    volumes: 
+      - redis_database:/data
+
+  minio:
+    image: minio/minio:latest
+    container_name: miniostorycontainer
+    ports:
+      - '9000:9000'
+      - '9001:9001'
+    volumes:
+      - '$PWD/minio_storage:/data'
+    environment:
+      MINIO_ROOT_USER: masoud
+      MINIO_ROOT_PASSWORD: StrongPassword#111
+    command: server --console-address ":9001" /data
+  # adminer:
+  #   image: adminer
+  #   restart: always
+  #   ports:
+  #     - 8080:8080
+
+volumes:
+  postgres_database:
+    driver: local
+  minio_storage: {}
+  redis_database:
+    driver: local
