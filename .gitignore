@@ -3,6 +3,8 @@
 # databases
 /minio_storage
 /postgres_database
+/_minio_storage
+/_postgres_database
 
 # compiled output
 /dist
