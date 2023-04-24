@@ -72,8 +72,8 @@ select gen_random_uuid ()
 from sale;
 
 -- Filling stories
-INSERT INTO story (story_id, title, description, content)
-VALUES (uuid_generate_v4(),'test title', 'test description', '{ "customer": "John Doe", "items": {"product": "Beer","qty": 6}}');
+-- INSERT INTO story (story_id, title, description, content)
+-- VALUES (uuid_generate_v4(),'test title', 'test description', '{ "customer": "John Doe", "items": {"product": "Beer","qty": 6}}');
 
 -- INSERT INTO story
 -- SELECT uuid_generate_v4();
@@ -589,4 +589,4 @@ VALUES
 		'Porttitor quis tortor descriptive text',
 		'Aenean non mi et nibh feugiat congue id et lacus.',
 		null
-	),
+	);
