@@ -1,3 +1,6 @@
+-- Remove preexisting tables;
+DROP TABLE IF EXISTS city, contacts, country, order_status, product, sale, status_name, store, story, users;
+
 -- Creation of product table
 CREATE TABLE IF NOT EXISTS product (
   product_id INT NOT NULL,
@@ -102,7 +105,7 @@ CREATE TABLE IF NOT EXISTS order_status (
 
 CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
 
-CREATE TABLE contacts (
+CREATE TABLE IF NOT EXISTS contacts (
   contact_id uuid DEFAULT uuid_generate_v4 (),
   first_name VARCHAR NOT NULL,
   last_name VARCHAR NOT NULL,
