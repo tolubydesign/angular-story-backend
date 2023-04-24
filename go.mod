@@ -1,4 +1,4 @@
-module postgresgolang
+module github.com/tolubydesign/angular-story-backend
 
 go 1.20
 
