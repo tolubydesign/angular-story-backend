@@ -1,0 +1,17 @@
+{
+  "restartable": "rs",
+  "verbose": true,
+  "ignore": [
+    ".git", 
+    "_minio_storage/**",
+    "_postgres_database/**",
+    "pkg/**"
+  ],
+  "execMap": {
+    "go": "golang"
+  },
+  "watch": [
+    "app/**",
+    "main.go"
+  ]
+}
