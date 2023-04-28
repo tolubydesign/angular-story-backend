@@ -2,14 +2,13 @@ package main
 
 import (
 	"database/sql"
-	"encoding/json"
+	"errors"
 	"fmt"
 	"log"
 	"os"
 
-	"github.com/google/uuid"
-
 	"github.com/joho/godotenv"
+	"github.com/tolubydesign/angular-story-backend/app/controller"
 
 	"github.com/gofiber/fiber/v2"
 
@@ -23,28 +22,6 @@ const (
 	password = "postgres"
 	dbname   = "postgres"
 )
-
-type Service struct {
-	db *sql.DB
-}
-
-type AllStories struct {
-	Story []Story `json:"story"`
-}
-
-type Story struct {
-	StoryId     uuid.UUID   `json:"story_id" validate:"uuid"`
-	Title       string      `json:"title" validate:"required"`
-	Description string      `json:"description" validate:"required"`
-	Content     interface{} `json:"content"` // also of type StoryContent
-}
-
-type StoryContent struct {
-	Id          string      `json:"id"`
-	Name        string      `json:"name"`
-	Description string      `json:"description"`
-	Children    interface{} `json:"children"`
-}
 
 func main() {
 	var envs map[string]string
@@ -63,26 +40,54 @@ func main() {
 	fmt.Printf("Port  = %v \n", environmentPort)
 	fmt.Printf("env port  = %v \n", gottenEnv)
 
-	app := fiber.New()
+	app := fiber.New(fiber.Config{
+		// Override default error handler
+		ErrorHandler: func(ctx *fiber.Ctx, err error) error {
+			// Status code defaults to 500
+			code := fiber.StatusInternalServerError
 
-	app.Get("/", func(c *fiber.Ctx) error {
-		return indexHandler(c, db)
+			// Retrieve the custom status code if it's a *fiber.Error
+			var e *fiber.Error
+			if errors.As(err, &e) {
+				code = e.Code
+			}
+
+			// Send custom error page
+			err = ctx.Status(code).SendString(err.Error())
+			if err != nil {
+				// In case the SendFile fails
+				return ctx.Status(fiber.StatusInternalServerError).SendString("Internal Server Error")
+			}
+
+			// Return from handler
+			return nil
+		},
 	})
 
-	app.Get("/all", func(c *fiber.Ctx) error {
-		return requestAllHandler(c, db)
+	app.Get("/", func(c *fiber.Ctx) error {
+		return controller.IndexHandler(c, db)
+	})
+
+	app.Get("/all", func(ctx *fiber.Ctx) error {
+		return controller.RequestAllStoriesHandler(ctx, db)
+	})
+
+	app.Get("/stories", func(ctx *fiber.Ctx) error {
+		return controller.RequestSingleStoryHandler(ctx, db)
 	})
 
 	app.Post("/", func(c *fiber.Ctx) error {
-		return postHandler(c, db)
+		return controller.PostHandler(c, db)
 	})
 
 	app.Put("/update", func(c *fiber.Ctx) error {
-		return putHandler(c, db)
+		return controller.PutHandler(c, db)
+	}, func(c *fiber.Ctx) error {
+		return c.SendString(c.Params("id"))
 	})
 
 	app.Delete("/delete", func(c *fiber.Ctx) error {
-		return deleteHandler(c, db)
+		return controller.DeleteHandler(c, db)
 	})
 
 	if environmentPort == "" {
@@ -99,88 +104,4 @@ func main() {
 
 	fmt.Println("The database is connected")
 	log.Fatalln(app.Listen(fmt.Sprintf(":%v", environmentPort)))
-}
-
-func indexHandler(c *fiber.Ctx, db *sql.DB) error {
-	return c.SendString("Hello Index Handler")
-}
-
-func postHandler(c *fiber.Ctx, db *sql.DB) error {
-	return c.SendString("Hello Post Handler")
-}
-
-func putHandler(c *fiber.Ctx, db *sql.DB) error {
-	return c.SendString("Hello Put Handler")
-}
-
-func deleteHandler(c *fiber.Ctx, db *sql.DB) error {
-	return c.SendString("Hello Delete Handler")
-}
-
-func requestAllHandler(ctx *fiber.Ctx, db *sql.DB) error {
-	stories, err := fetchAllStories(db)
-
-	var storyArray []Story
-	for _, story := range stories {
-		var content interface{}
-		if story.Content != nil {
-			str := fmt.Sprintf("%s", story.Content)
-			byt := []byte(str)
-			json.Unmarshal(byt, &content)
-		}
-
-		arrBookForPublic := Story{
-			StoryId:     story.StoryId,
-			Title:       story.Title,
-			Description: story.Description,
-			Content:     content,
-		}
-		storyArray = append(storyArray, arrBookForPublic)
-	}
-
-	allStories := AllStories{
-		Story: storyArray,
-	}
-
-	if err != nil {
-		panic(err)
-	}
-
-	// return ctx.BodyParser(response)
-	ctx.Response().StatusCode()
-	ctx.Response().Header.Add("Content-Type", "application/json")
-	return ctx.JSON(allStories)
-}
-
-func ErrorResponse(err error) {
-	if err != nil {
-		panic(err)
-	}
-}
-
-func fetchAllStories(db *sql.DB) ([]Story, error) {
-	request := `select * from Story`
-	rows, err := db.Query(request)
-	if err != nil {
-		return nil, err
-	}
-	defer rows.Close()
-
-	var stories []Story
-
-	for rows.Next() {
-		var story Story
-		err := rows.Scan(&story.StoryId, &story.Title, &story.Description, &story.Content)
-		if err != nil {
-			return stories, err
-		}
-
-		stories = append(stories, story)
-	}
-
-	if err = rows.Err(); err != nil {
-		return stories, err
-	}
-
-	return stories, nil
 }
