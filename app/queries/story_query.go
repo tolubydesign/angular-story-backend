@@ -64,6 +64,5 @@ func GetSingleStory(id string, con *fasthttp.RequestCtx, db *sql.DB) (models.Sto
 		log.Printf("story with id of %s found.\n", id)
 	}
 
-	log.Printf("story : %s.\n", story)
 	return story, nil
 }
