@@ -40,7 +40,26 @@ func main() {
 	fmt.Printf("Port  = %v \n", environmentPort)
 	fmt.Printf("env port  = %v \n", gottenEnv)
 
-	app := fiber.New(fiber.Config{
+	app := SetupApplication()
+	controller.SetupMethods(app, db)
+
+	if environmentPort == "" {
+		environmentPort = "2100"
+	}
+
+	if err != nil {
+		panic(err)
+	}
+
+	if err = db.Ping(); err != nil {
+		panic(err)
+	}
+
+	log.Fatalln(app.Listen(fmt.Sprintf(":%v", environmentPort)))
+}
+
+func SetupApplication() *fiber.App {
+	return fiber.New(fiber.Config{
 		// Override default error handler
 		ErrorHandler: func(ctx *fiber.Ctx, err error) error {
 			// Status code defaults to 500
@@ -63,45 +82,4 @@ func main() {
 			return nil
 		},
 	})
-
-	app.Get("/", func(c *fiber.Ctx) error {
-		return controller.IndexHandler(c, db)
-	})
-
-	app.Get("/all", func(ctx *fiber.Ctx) error {
-		return controller.RequestAllStoriesHandler(ctx, db)
-	})
-
-	app.Get("/stories", func(ctx *fiber.Ctx) error {
-		return controller.RequestSingleStoryHandler(ctx, db)
-	})
-
-	app.Post("/", func(c *fiber.Ctx) error {
-		return controller.PostHandler(c, db)
-	})
-
-	app.Put("/update", func(c *fiber.Ctx) error {
-		return controller.PutHandler(c, db)
-	}, func(c *fiber.Ctx) error {
-		return c.SendString(c.Params("id"))
-	})
-
-	app.Delete("/delete", func(c *fiber.Ctx) error {
-		return controller.DeleteHandler(c, db)
-	})
-
-	if environmentPort == "" {
-		environmentPort = "2100"
-	}
-
-	if err != nil {
-		panic(err)
-	}
-
-	if err = db.Ping(); err != nil {
-		panic(err)
-	}
-
-	fmt.Println("The database is connected")
-	log.Fatalln(app.Listen(fmt.Sprintf(":%v", environmentPort)))
 }
