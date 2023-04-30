@@ -104,43 +104,36 @@ func CheckHealth(c *fiber.Ctx, db *sql.DB) error {
 
 func InsertStory(c *fiber.Ctx, db *sql.DB) error {
 	// TODO: verify that information being sent in is valid json
-	fiberContext := c.Context()
-	ctx, cancel := context.WithTimeout(fiberContext, 3*time.Second)
-	defer cancel()
-
-	var body models.Story
-	byteBody := c.Body()
-	json.Unmarshal(byteBody, &body)
-	bodyContentJson, err := json.Marshal(body.Content)
+	err := queries.AddStory(c, db)
 	if err != nil {
-		panic(err)
-	}
-
-	model := models.Story{
-		Title:       body.Title,
-		Description: body.Description,
-		Content:     bodyContentJson,
-	}
-
-	execution := "INSERT INTO story(title, description, content) VALUES($1, $2, $3);"
-	result, err := db.ExecContext(ctx, execution, model.Title, model.Description, model.Content)
-
-	if err != nil {
-		log.Fatalf("Fatal Results Error - %s", err)
-	}
-
-	rows, err := result.RowsAffected()
-	if err != nil {
-		log.Fatalf("Fatal Rows Error: %d", err)
-	}
-	if rows != 1 {
-		log.Fatalf("expected to affect 1 row, affected %d", rows)
+		log.Fatalf("Insert Story Fatal Error - %s", err)
 	}
 
 	response := models.JSONResponse{
 		Type:    "success",
 		Data:    nil,
 		Message: "Database has been updated.",
+	}
+
+	c.Response().StatusCode()
+	c.Response().Header.Add("Content-Type", "application/json")
+	return c.JSON(response)
+}
+
+func DeleteStory(c *fiber.Ctx, db *sql.DB) error {
+	context := c.Context()
+	headers := c.GetReqHeaders()
+	storyId := headers["Id"]
+	err := queries.DeleteSingleStory(storyId, context, db)
+	if err != nil {
+		log.Fatalf("Delete Story Fatal Error - %s", err)
+	}
+
+	message := fmt.Sprintf("Deleted story with id: %s", storyId)
+	response := models.JSONResponse{
+		Type:    "success",
+		Data:    nil,
+		Message: message,
 	}
 
 	c.Response().StatusCode()

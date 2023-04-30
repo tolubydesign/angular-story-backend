@@ -3,10 +3,12 @@ package queries
 import (
 	"context"
 	"database/sql"
+	"encoding/json"
 	"fmt"
 	"log"
 	"time"
 
+	"github.com/gofiber/fiber/v2"
 	_ "github.com/lib/pq"
 	"github.com/tolubydesign/angular-story-backend/app/models"
 	"github.com/valyala/fasthttp"
@@ -65,4 +67,56 @@ func GetSingleStory(id string, con *fasthttp.RequestCtx, db *sql.DB) (models.Sto
 	}
 
 	return story, nil
+}
+
+func AddStory(c *fiber.Ctx, db *sql.DB) error {
+	fiberContext := c.Context()
+	ctx, cancel := context.WithTimeout(fiberContext, 3*time.Second)
+	defer cancel()
+
+	var body models.Story
+	byteBody := c.Body()
+	json.Unmarshal(byteBody, &body)
+	bodyContentJson, err := json.Marshal(body.Content)
+	if err != nil {
+		return err
+	}
+
+	model := models.Story{
+		Title:       body.Title,
+		Description: body.Description,
+		Content:     bodyContentJson,
+	}
+
+	execution := "INSERT INTO story(title, description, content) VALUES($1, $2, $3);"
+	result, err := db.ExecContext(ctx, execution, model.Title, model.Description, model.Content)
+
+	if err != nil {
+		return err
+		// log.Fatalf("Fatal Results Error - %s", err)
+	}
+
+	rows, err := result.RowsAffected()
+	if err != nil {
+		return err
+		// log.Fatalf("Fatal Rows Error: %d", err)
+	}
+	if rows != 1 {
+		return err
+		// log.Fatalf("expected to affect 1 row, affected %d", rows)
+	}
+
+	return nil
+}
+
+func DeleteSingleStory(id string, ctx *fasthttp.RequestCtx, db *sql.DB) error {
+	basicContext, cancel := context.WithTimeout(ctx, 3*time.Second)
+	defer cancel()
+	deleteStmt := `DELETE FROM story WHERE story_id=$1`
+	_, err := db.ExecContext(basicContext, deleteStmt, id)
+	if err != nil {
+		return err
+	}
+
+	return nil
 }

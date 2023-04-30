@@ -23,6 +23,10 @@ func SetupMethods(app *fiber.App, db *sql.DB) {
 		return InsertStory(ctx, db)
 	})
 
+	app.Delete("/story", func(ctx *fiber.Ctx) error {
+		return DeleteStory(ctx, db)
+	})
+
 	app.Post("/", func(c *fiber.Ctx) error {
 		return PostHandler(c, db)
 	})
