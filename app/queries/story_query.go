@@ -15,16 +15,6 @@ import (
 	"github.com/valyala/fasthttp"
 )
 
-type DatabaseService struct {
-	db *sql.DB
-}
-
-type UpdateDetailsArguments struct {
-	Id          string
-	Title       *string
-	Description *string
-}
-
 func GetAllStories(db *sql.DB) ([]models.Story, error) {
 	request := `select * from Story`
 	rows, err := db.Query(request)
@@ -72,9 +62,15 @@ func GetSingleStory(id string, con *fasthttp.RequestCtx, db *sql.DB) (models.Sto
 		log.Printf("Get Single Story. story with id of %s found.\n", id)
 	}
 
+	if err != nil {
+		return story, err
+	}
+
 	return story, nil
 }
 
+// POST Request.
+// Add a new story to the database. Includes both content and
 func AddStory(c *fiber.Ctx, db *sql.DB) error {
 	fiberContext := c.Context()
 	ctx, cancel := context.WithTimeout(fiberContext, 3*time.Second)
@@ -90,14 +86,6 @@ func AddStory(c *fiber.Ctx, db *sql.DB) error {
 		return err
 	}
 
-	// Convert JSON to Struct
-	// var content *models.StoryContent
-	// var content interface{}
-	// conversionJSON := json.Unmarshal([]byte(fmt.Sprintf("%s", bodyContentJson)), &content)
-	// if conversionJSON != nil {
-	// 	log.Fatal(err)
-	// }
-
 	model := models.Story{
 		Title:       body.Title,
 		Description: body.Description,
@@ -108,22 +96,21 @@ func AddStory(c *fiber.Ctx, db *sql.DB) error {
 	result, err := db.ExecContext(ctx, execution, model.Title, model.Description, model.Content)
 	if err != nil {
 		return err
-		// log.Fatalf("Fatal Results Error - %s", err)
 	}
 
 	rows, err := result.RowsAffected()
 	if err != nil {
 		return err
-		// log.Fatalf("Fatal Rows Error: %d", err)
 	}
 	if rows != 1 {
 		return err
-		// log.Fatalf("expected to affect 1 row, affected %d", rows)
 	}
 
 	return nil
 }
 
+// DELETE Request.
+// Remove a single story.
 func DeleteSingleStory(id string, ctx *fasthttp.RequestCtx, db *sql.DB) error {
 	basicContext, cancel := context.WithTimeout(ctx, 3*time.Second)
 	defer cancel()
@@ -136,70 +123,8 @@ func DeleteSingleStory(id string, ctx *fasthttp.RequestCtx, db *sql.DB) error {
 	return nil
 }
 
-func UpdateSingleStoryContent(id string, content interface{}, ctx *fasthttp.RequestCtx, db *sql.DB) error {
-	basicContext, cancel := context.WithTimeout(ctx, 3*time.Second)
-	defer cancel()
-	updateStmt := `UPDATE story set content=$1 where story_id=$2`
-
-	result, err := db.ExecContext(basicContext, updateStmt, content, id)
-	if err != nil {
-		return err
-	}
-
-	rows, err := result.RowsAffected()
-	if err != nil {
-		return err
-	}
-
-	if rows != 1 {
-		return err
-	}
-
-	return nil
-}
-
-func UpdateStoryTitle(id string, title string, ctx *fasthttp.RequestCtx, db *sql.DB) error {
-	basicContext, cancel := context.WithTimeout(ctx, 2*time.Second)
-	defer cancel()
-	updateStmt := `UPDATE story set title=$1 where story_id=$2`
-	result, err := db.ExecContext(basicContext, updateStmt, title, id)
-	if err != nil {
-		return err
-	}
-
-	rows, err := result.RowsAffected()
-	if err != nil {
-		return err
-	}
-
-	if rows != 1 {
-		return err
-	}
-
-	return nil
-}
-
-func UpdateStoryDescription(id string, description string, ctx *fasthttp.RequestCtx, db *sql.DB) error {
-	basicContext, cancel := context.WithTimeout(ctx, 2*time.Second)
-	defer cancel()
-	updateStmt := `UPDATE story set description=$1 where story_id=$2`
-	result, err := db.ExecContext(basicContext, updateStmt, description, id)
-	if err != nil {
-		return err
-	}
-
-	rows, err := result.RowsAffected()
-	if err != nil {
-		return err
-	}
-
-	if rows != 1 {
-		return err
-	}
-
-	return nil
-}
-
+// PUT Request.
+// Update the contents and information of a single story row.
 func UpdateStory(ctx *fiber.Ctx, db *sql.DB) error {
 	fiberContext := ctx.Context()
 	headers := ctx.GetReqHeaders()
