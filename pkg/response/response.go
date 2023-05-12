@@ -26,6 +26,22 @@ var DefaultErrorHandler = func(c *fiber.Ctx, err error) error {
 	return c.Status(code).SendString(err.Error())
 }
 
+func BasicErrorHandling(c *fiber.Ctx, err error) error {
+	code := fiber.StatusInternalServerError
+	var e *fiber.Error
+	if errors.As(err, &e) {
+		code = e.Code
+	}
+
+	errorJson := &models.ErrorResponse{
+		ErrorMessage: err.Error(),
+		Code:         code,
+	}
+
+	c.Set(fiber.HeaderContentType, fiber.MIMETextPlainCharsetUTF8)
+	return c.Status(code).JSON(errorJson)
+}
+
 // Override default error handler
 var ErrorHandler = func(ctx *fiber.Ctx, err error) error {
 	// Status code defaults to 500
@@ -59,11 +75,7 @@ func RespondSuccess(ctx *fiber.Ctx, responseCode int, data interface{}) error {
 	return ctx.Status(responseCode).JSON(data)
 }
 
-func DataResponse() {
-
-}
-
-func ErrorResponse(err error) {
+func PanicError(err error) {
 	if err != nil {
 		panic(err)
 	}

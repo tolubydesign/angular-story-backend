@@ -5,16 +5,16 @@ import (
 )
 
 type StoryContent struct {
-	Id          string      `json:"id"`
-	Name        string      `json:"name"`
-	Description string      `json:"description"`
-	Children    interface{} `json:"children"`
+	Id          string          `json:"id"`
+	Name        string          `json:"name"`
+	Description string          `json:"description"`
+	Children    *[]StoryContent `json:"children"`
 }
 type Story struct {
 	StoryId     uuid.UUID   `json:"story_id" validate:"uuid"`
-	Title       string      `json:"title" validate:"required"`
-	Description string      `json:"description" validate:"required"`
-	Content     interface{} `json:"content"`
+	Title       *string     `json:"title" validate:"required"`
+	Description *string     `json:"description" validate:"required"`
+	Content     interface{} `json:"content"` // type *StoryContent
 }
 
 type AllStories struct {

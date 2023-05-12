@@ -10,19 +10,24 @@ import (
 
 	"github.com/tolubydesign/angular-story-backend/app/models"
 	"github.com/tolubydesign/angular-story-backend/app/queries"
+	"github.com/tolubydesign/angular-story-backend/pkg/response"
 
 	"github.com/gofiber/fiber/v2"
 
 	_ "github.com/lib/pq"
 )
 
-func RequestAllStoriesHandler(ctx *fiber.Ctx, db *sql.DB) error {
+func AllStoriesHandlerRequest(ctx *fiber.Ctx, db *sql.DB) error {
 	stories, err := queries.GetAllStories(db)
 
 	var storyArray []models.Story
 	for _, story := range stories {
+		// var content *models.StoryContent
 		var content interface{}
 		if story.Content != nil {
+			// NOTE: look at https://go.dev/src/cmd/vet/testdata/print/print.go and https://pkg.go.dev/fmt#hdr-Printing
+			// to address error "fmt.Sprintf format %s has arg story.Content of wrong type"
+			// PREVIOUSLY: str := fmt.Sprintf("%s", story.Content)
 			str := fmt.Sprintf("%s", story.Content)
 			byt := []byte(str)
 			json.Unmarshal(byt, &content)
@@ -40,14 +45,13 @@ func RequestAllStoriesHandler(ctx *fiber.Ctx, db *sql.DB) error {
 	response := models.JSONResponse{
 		Type:    "success",
 		Data:    storyArray,
-		Message: "",
+		Message: "Fetch all stories.",
 	}
 
 	if err != nil {
 		panic(err)
 	}
 
-	// return ctx.BodyParser(response)
 	ctx.Response().StatusCode()
 	ctx.Response().Header.Add("Content-Type", "application/json")
 	return ctx.JSON(response)
@@ -63,9 +67,13 @@ func RequestSingleStoryHandler(ctx *fiber.Ctx, db *sql.DB) error {
 		panic(err)
 	}
 
+	// Convert JSON to Struct
 	var content interface{}
 	if story.Content != nil {
-		str := fmt.Sprintf("%s", story.Content)
+		// NOTE: look at https://go.dev/src/cmd/vet/testdata/print/print.go and https://pkg.go.dev/fmt#hdr-Printing
+		// to address error "fmt.Sprintf format %s has arg story.Content of wrong type"
+		// PREVIOUSLY: str := fmt.Sprintf("%S", story.Content)
+		str := []byte(fmt.Sprintf("%s", story.Content))
 		byt := []byte(str)
 		json.Unmarshal(byt, &content)
 	}
@@ -80,7 +88,7 @@ func RequestSingleStoryHandler(ctx *fiber.Ctx, db *sql.DB) error {
 	response := models.JSONResponse{
 		Type:    "success",
 		Data:    returningResponse,
-		Message: "",
+		Message: "Fetch single story.",
 	}
 
 	ctx.Response().StatusCode()
@@ -120,7 +128,7 @@ func InsertStory(c *fiber.Ctx, db *sql.DB) error {
 	return c.JSON(response)
 }
 
-func DeleteStory(c *fiber.Ctx, db *sql.DB) error {
+func DeleteStoryRequest(c *fiber.Ctx, db *sql.DB) error {
 	context := c.Context()
 	headers := c.GetReqHeaders()
 	storyId := headers["Id"]
@@ -134,6 +142,26 @@ func DeleteStory(c *fiber.Ctx, db *sql.DB) error {
 		Type:    "success",
 		Data:    nil,
 		Message: message,
+	}
+
+	c.Response().StatusCode()
+	c.Response().Header.Add("Content-Type", "application/json")
+	return c.JSON(response)
+}
+
+func UpdateStoryRequest(c *fiber.Ctx, db *sql.DB) error {
+	queryError := queries.UpdateStory(c, db)
+	if queryError != nil {
+		return response.BasicErrorHandling(c, queryError)
+	}
+
+	headers := c.GetReqHeaders()
+	id := headers["Id"]
+	message := fmt.Sprintf("Updated story with id:%s", id)
+	response := models.JSONResponse{
+		Type:    "success",
+		Message: message,
+		Data:    nil,
 	}
 
 	c.Response().StatusCode()
