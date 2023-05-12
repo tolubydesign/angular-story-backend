@@ -4,8 +4,7 @@
   "ignore": [
     ".git", 
     "_minio_storage/**",
-    "_postgres_database/**",
-    "pkg/**"
+    "_postgres_database/**"
   ],
   "execMap": {
     "go": "golang"
