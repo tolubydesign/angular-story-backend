@@ -1,6 +1,10 @@
 package utils
 
 import (
+	"errors"
+	"reflect"
+	"strings"
+
 	"github.com/go-playground/validator/v10"
 	"github.com/google/uuid"
 )
@@ -33,4 +37,37 @@ func ValidatorErrors(err error) map[string]string {
 	}
 
 	return fields
+}
+
+// NOTE: The Laws of Reflection - https://go.dev/blog/laws-of-reflection
+func ValidateLimitedStringVariable(str string) error {
+	value := reflect.TypeOf(str)
+	if value.Kind() != reflect.String {
+		return errors.New("Variable is not a valid string.")
+	}
+
+	if strings.ReplaceAll(str, " ", "") == "" {
+		return errors.New("A valid string must be provided.")
+	}
+
+	strLength := len(str)
+	if strLength > 255 {
+		return errors.New("String is too long.")
+	}
+
+	additionalChecks := AdditionalStringValidation(str)
+	if additionalChecks != nil {
+		return additionalChecks
+	}
+
+	return nil
+}
+
+func AdditionalStringValidation(str string) error {
+	value := reflect.TypeOf(str)
+	if value.Kind() != reflect.String {
+		return errors.New("Additional validation found. Invalid value provided.")
+	}
+
+	return nil
 }
