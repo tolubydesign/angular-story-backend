@@ -12,7 +12,7 @@ func SetupMethods(app *fiber.App, db *sql.DB) {
 	})
 
 	app.Get("/all", func(ctx *fiber.Ctx) error {
-		return RequestAllStoriesHandler(ctx, db)
+		return AllStoriesHandlerRequest(ctx, db)
 	})
 
 	app.Get("/stories", func(ctx *fiber.Ctx) error {
@@ -24,7 +24,11 @@ func SetupMethods(app *fiber.App, db *sql.DB) {
 	})
 
 	app.Delete("/story", func(ctx *fiber.Ctx) error {
-		return DeleteStory(ctx, db)
+		return DeleteStoryRequest(ctx, db)
+	})
+
+	app.Put("/update-story", func(ctx *fiber.Ctx) error {
+		return UpdateStoryRequest(ctx, db)
 	})
 
 	app.Post("/", func(c *fiber.Ctx) error {
