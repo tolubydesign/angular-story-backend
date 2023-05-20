@@ -27,6 +27,7 @@ func main() {
 	var envs map[string]string
 	envs, err := godotenv.Read(".env")
 	gottenEnv := os.Getenv("PORT")
+	environment := os.Getenv("ENV")
 	if err != nil {
 		log.Fatal("Error loading .env file")
 	}
@@ -35,20 +36,20 @@ func main() {
 
 	// Connect to database
 	db, err := sql.Open("postgres", connection)
+	if err != nil {
+		panic(err)
+	}
 
 	environmentPort := envs["PORT"]
 	fmt.Printf("Port  = %v \n", environmentPort)
 	fmt.Printf("env port  = %v \n", gottenEnv)
 
 	app := SetupApplication()
+	controller.HandleCORS(app, environment)
 	controller.SetupMethods(app, db)
 
 	if environmentPort == "" {
 		environmentPort = "2100"
-	}
-
-	if err != nil {
-		panic(err)
 	}
 
 	if err = db.Ping(); err != nil {
