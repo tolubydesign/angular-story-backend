@@ -3,7 +3,7 @@ set session my.number_of_sales = '100';
 set session my.number_of_users = '100';
 set session my.number_of_products = '100';
 set session my.number_of_stores = '100';
-set session my.number_of_coutries = '100';
+set session my.number_of_countries = '100';
 set session my.number_of_cities = '30';
 set session my.status_names = '5';
 set session my.start_date = '2019-01-01 00:00:00';
@@ -21,13 +21,13 @@ FROM GENERATE_SERIES(1, current_setting('my.number_of_products')::int) as id;
 -- Filling of countries
 INSERT INTO country
 select id, concat('Country ', id) 
-FROM GENERATE_SERIES(1, current_setting('my.number_of_coutries')::int) as id;
+FROM GENERATE_SERIES(1, current_setting('my.number_of_countries')::int) as id;
 
 -- Filling of cities
 INSERT INTO city
 select id
 	, concat('City ', id)
-	, floor(random() * (current_setting('my.number_of_coutries')::int) + 1)::int
+	, floor(random() * (current_setting('my.number_of_countries')::int) + 1)::int
 FROM GENERATE_SERIES(1, current_setting('my.number_of_cities')::int) as id;
 
 -- Filling of stores
@@ -589,4 +589,189 @@ VALUES
 		'Porttitor quis tortor descriptive text',
 		'Aenean non mi et nibh feugiat congue id et lacus.',
 		null
+	),
+	(
+		'website request description',
+		'website request title',
+		'{
+			"description": "In aliquet nisi a.",
+			"id": "08fd4949-50dd-460f-96d8-d208414c2d05",
+			"name": "Nam blandit magna vel lacinia",
+			"children": [
+					{
+							"children": null,
+							"description": "Quisque blandit magna vel lacinia fringilla. Mauris sit amet gravida tellus.",
+							"id": "4537c199-114e-4834-9abf-56115e145ec0",
+							"name": "Porttitor quis ultrices tortor"
+					},
+					{
+							"children": [
+									{
+											"children": null,
+											"description": "Quisque blandit magna vel lacinia fringilla. Mauris sit amet gravida tellus.",
+											"id": "43a4bf62-841d-4277-851c-220cd592d3e8",
+											"name": "Porttitor quis ultrices tortor"
+									}
+							],
+							"description": "2 Quisque blandit magna vel lacinia fringilla. Mauris sit amet gravida tellus.",
+							"id": "add23209-836c-4006-a33d-2c9915c66514",
+							"name": "2 Porttitor quis ultrices tortor"
+					}
+			]
+		}'
+	),
+	(
+		'website request description',
+		'website request title',
+		'{
+			"children": [
+					{
+							"children": null,
+							"description": "Quisque blandit magna vel lacinia fringilla. Mauris sit amet gravida tellus.",
+							"id": "724a774a-5e6b-4b81-adca-fb414bc4c1d5",
+							"name": "Porttitor quis ultrices tortor"
+					},
+					{
+							"children": [
+									{
+											"children": null,
+											"description": "Quisque blandit magna vel lacinia fringilla. Mauris sit amet gravida tellus.",
+											"id": "8e10ecc6-2e0a-4218-bacf-81e185850496",
+											"name": "Porttitor quis ultrices tortor"
+									}
+							],
+							"description": "2 Quisque blandit magna vel lacinia fringilla. Mauris sit amet gravida tellus.",
+							"id": "b6606b93-09c0-41e8-94fe-4e85e30b2f4b",
+							"name": "2 Porttitor quis ultrices tortor"
+					}
+			],
+			"description": "In aliquet nisi a.",
+			"id": "07e2973a-69f9-435d-ae68-7b4176114ed6",
+			"name": "Nam blandit magna vel lacinia"
+		}'
+	),
+	(
+		'website request description',
+		'website request title',
+		'{
+			"children": [
+					{
+							"children": null,
+							"description": "Quisque blandit magna vel lacinia fringilla. Mauris sit amet gravida tellus.",
+							"id": "11e8a96d-5a13-4f1d-b983-fa24eb66f1a0",
+							"name": "Porttitor quis ultrices tortor"
+					},
+					{
+							"children": [
+									{
+											"children": null,
+											"description": "Quisque blandit magna vel lacinia fringilla. Mauris sit amet gravida tellus.",
+											"id": "cd29c073-bdd8-4459-83f1-1a8045c4cdfb",
+											"name": "Porttitor quis ultrices tortor"
+									}
+							],
+							"description": "2 Quisque blandit magna vel lacinia fringilla. Mauris sit amet gravida tellus.",
+							"id": "231b506d-a1b2-4904-a5fe-2c4a24cd3367",
+							"name": "2 Porttitor quis ultrices tortor"
+					}
+			],
+			"description": "In aliquet nisi a.",
+			"id": "1d260645-52e1-4138-8720-646a857eb5b2",
+			"name": "Nam blandit magna vel lacinia"
+		}'
+	),
+	(
+		'website request description',
+		'website request title',
+		'{
+			"children": [
+					{
+							"children": null,
+							"description": "Quisque blandit magna vel lacinia fringilla. Mauris sit amet gravida tellus.",
+							"id": "40e34db7-5d9a-423c-9b82-a5b5ed0f9a94",
+							"name": "Porttitor quis ultrices tortor"
+					},
+					{
+							"children": [
+									{
+											"children": null,
+											"description": "Quisque blandit magna vel lacinia fringilla. Mauris sit amet gravida tellus.",
+											"id": "61b0c583-2335-4794-80e0-b220a3e3e9b6",
+											"name": "Porttitor quis ultrices tortor"
+									}
+							],
+							"description": "2 Quisque blandit magna vel lacinia fringilla. Mauris sit amet gravida tellus.",
+							"id": "cc3d7964-1507-4054-bc4e-005a4e12939a",
+							"name": "2 Porttitor quis ultrices tortor"
+					}
+			],
+			"description": "In aliquet nisi a.",
+			"id": "72fb081b-5548-460a-b1a1-a047855b33a8",
+			"name": "Nam blandit magna vel lacinia"
+		}'
+	),
+	(
+		'website request description',
+		'website request title',
+		'{
+			"children": [
+					{
+							"children": null,
+							"description": "Quisque blandit magna vel lacinia fringilla. Mauris sit amet gravida tellus.",
+							"id": "ebd00c42-841c-44f2-8e8e-bde095d502c6",
+							"name": "Porttitor quis ultrices tortor"
+					},
+					{
+							"children": [
+									{
+											"children": null,
+											"description": "Quisque blandit magna vel lacinia fringilla. Mauris sit amet gravida tellus.",
+											"id": "859da15f-8cbf-4d31-b799-0e1309726534",
+											"name": "Porttitor quis ultrices tortor"
+									}
+							],
+							"description": "2 Quisque blandit magna vel lacinia fringilla. Mauris sit amet gravida tellus.",
+							"id": "c37eeaea-23f1-448e-89bd-1c010605c90e",
+							"name": "2 Porttitor quis ultrices tortor"
+					}
+			],
+			"description": "In aliquet nisi a.",
+			"id": "7e0d122f-b295-4082-9d7c-242d7b2bd517",
+			"name": "Nam blandit magna vel lacinia"
+		}'
+	),
+	(
+		'website request description',
+		'website request title',
+		'{
+			"children": [
+					{
+							"children": null,
+							"description": "Quisque blandit magna vel lacinia fringilla. Mauris sit amet gravida tellus.",
+							"id": "08d9d62b-0384-4fc5-aea5-6c0b948cf9a1",
+							"name": "Porttitor quis ultrices tortor"
+					}
+			],
+			"description": "In aliquet nisi a.",
+			"id": "20a7ec2f-ac95-4fd9-811a-d7fdd5882991",
+			"name": "Nam blandit magna vel lacinia"
+		}'
+	),
+	(
+		'website request description',
+		'website request title',
+		'{
+			"children": [
+					{
+							"children": null,
+							"description": "Quisque blandit magna vel lacinia fringilla. Mauris sit amet gravida tellus.",
+							"id": "9aafdbd3-3f09-4906-8956-cd2185f1fd0c",
+							"name": "Porttitor quis ultrices tortor"
+					}
+			],
+			"description": "In aliquet nisi a.",
+			"id": "db5d3009-df3e-49d5-b5df-8a03b429ce34",
+			"name": "Nam blandit magna vel lacinia"
+		}'
 	);
+	
