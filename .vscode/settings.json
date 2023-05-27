@@ -2,6 +2,8 @@
   "cSpell.words": [
     "fasthttp",
     "fiber",
-    "gofiber"
+    "gofiber",
+    "ossp",
+    "pgcrypto"
   ]
 }
