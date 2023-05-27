@@ -34,7 +34,7 @@ func AllStoriesHandlerRequest(ctx *fiber.Ctx, db *sql.DB) error {
 		}
 
 		returningStoryModel := models.Story{
-			StoryId:     story.StoryId,
+			Id:          story.Id,
 			Title:       story.Title,
 			Description: story.Description,
 			Content:     content,
@@ -79,7 +79,7 @@ func RequestSingleStoryHandler(ctx *fiber.Ctx, db *sql.DB) error {
 	}
 
 	returningResponse := models.Story{
-		StoryId:     story.StoryId,
+		Id:          story.Id,
 		Title:       story.Title,
 		Description: story.Description,
 		Content:     content,
