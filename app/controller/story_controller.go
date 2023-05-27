@@ -157,7 +157,7 @@ func UpdateStoryRequest(c *fiber.Ctx, db *sql.DB) error {
 
 	headers := c.GetReqHeaders()
 	id := headers["Id"]
-	message := fmt.Sprintf("Updated story with id:%s", id)
+	message := fmt.Sprintf("Updated story with id: %s", id)
 	response := models.JSONResponse{
 		Type:    "success",
 		Message: message,
