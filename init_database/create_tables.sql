@@ -1,5 +1,10 @@
 -- Remove preexisting tables;
 DROP TABLE IF EXISTS city, contacts, country, order_status, product, sale, status_name, store, story, users;
+-- TODO: create user tables
+-- TODO: create dummy users
+-- TODO: JWT tokens
+-- TODO: JWT tokens - Configured to expire 
+-- TODO: User login system
 
 -- Creation of product table
 CREATE TABLE IF NOT EXISTS product (

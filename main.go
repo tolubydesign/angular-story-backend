@@ -15,6 +15,7 @@ import (
 	_ "github.com/lib/pq"
 )
 
+// TODO: redis logging system.
 const (
 	host     = "localhost"
 	port     = 5432
