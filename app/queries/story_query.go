@@ -27,7 +27,7 @@ func GetAllStories(db *sql.DB) ([]models.Story, error) {
 
 	for rows.Next() {
 		var story models.Story
-		err := rows.Scan(&story.StoryId, &story.Title, &story.Description, &story.Content)
+		err := rows.Scan(&story.Id, &story.Title, &story.Description, &story.Content)
 		if err != nil {
 			return stories, err
 		}
@@ -51,7 +51,7 @@ func GetSingleStory(id string, con *fasthttp.RequestCtx, db *sql.DB) (models.Sto
 		WHERE story_id = '%s';
 	`, id)
 	var story models.Story
-	err := db.QueryRowContext(ctx, query).Scan(&story.StoryId, &story.Title, &story.Description, &story.Content)
+	err := db.QueryRowContext(ctx, query).Scan(&story.Id, &story.Title, &story.Description, &story.Content)
 
 	switch {
 	case err == sql.ErrNoRows:
