@@ -34,7 +34,7 @@ func AllStoriesHandlerRequest(ctx *fiber.Ctx, db *sql.DB) error {
 		}
 
 		returningStoryModel := models.Story{
-			StoryId:     story.StoryId,
+			Id:          story.Id,
 			Title:       story.Title,
 			Description: story.Description,
 			Content:     content,
@@ -79,7 +79,7 @@ func RequestSingleStoryHandler(ctx *fiber.Ctx, db *sql.DB) error {
 	}
 
 	returningResponse := models.Story{
-		StoryId:     story.StoryId,
+		Id:          story.Id,
 		Title:       story.Title,
 		Description: story.Description,
 		Content:     content,
@@ -157,7 +157,7 @@ func UpdateStoryRequest(c *fiber.Ctx, db *sql.DB) error {
 
 	headers := c.GetReqHeaders()
 	id := headers["Id"]
-	message := fmt.Sprintf("Updated story with id:%s", id)
+	message := fmt.Sprintf("Updated story with id: %s", id)
 	response := models.JSONResponse{
 		Type:    "success",
 		Message: message,
