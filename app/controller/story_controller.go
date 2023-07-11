@@ -22,7 +22,6 @@ func AllStoriesHandlerRequest(ctx *fiber.Ctx, db *sql.DB) error {
 
 	var storyArray []models.Story
 	for _, story := range stories {
-		// var content *models.StoryContent
 		var content interface{}
 		if story.Content != nil {
 			// NOTE: look at https://go.dev/src/cmd/vet/testdata/print/print.go and https://pkg.go.dev/fmt#hdr-Printing

@@ -17,7 +17,6 @@ type ErrorResponse struct {
 	Code         int         `json:"code"`
 }
 
-// HTTPError struct to HTTPError object.
 type HTTPError struct {
 	ErrorMessage interface{} `json:"errorMessage"`
 }
