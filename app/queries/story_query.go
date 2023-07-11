@@ -15,6 +15,15 @@ import (
 	"github.com/valyala/fasthttp"
 )
 
+/*
+Get all Story objects related to the user.
+
+db: PostgreSQL Database.
+
+An error will be returned if issues occur. Otherwise all stories will be returned.
+
+TODO: require jwt, user verification, user login and user related story objects
+*/
 func GetAllStories(db *sql.DB) ([]models.Story, error) {
 	request := `select * from Story`
 	rows, err := db.Query(request)
@@ -42,6 +51,17 @@ func GetAllStories(db *sql.DB) ([]models.Story, error) {
 	return stories, nil
 }
 
+/*
+Get a single Story Object from the database.
+
+id: The story object in question.
+
+con: fasthttp Request Context (Pointer).
+
+db: PostgreSQL Database.
+
+An error will be returned if issues occur. Otherwise the relevant story will be returned.
+*/
 func GetSingleStory(id string, con *fasthttp.RequestCtx, db *sql.DB) (models.Story, error) {
 	ctx, cancel := context.WithTimeout(con, 6*time.Second)
 	defer cancel()
@@ -53,6 +73,7 @@ func GetSingleStory(id string, con *fasthttp.RequestCtx, db *sql.DB) (models.Sto
 	var story models.Story
 	err := db.QueryRowContext(ctx, query).Scan(&story.Id, &story.Title, &story.Description, &story.Content)
 
+	// TODO: handle error responses
 	switch {
 	case err == sql.ErrNoRows:
 		log.Printf("Get Single Story. Error no story with id of %s\n", id)
@@ -69,8 +90,16 @@ func GetSingleStory(id string, con *fasthttp.RequestCtx, db *sql.DB) (models.Sto
 	return story, nil
 }
 
-// POST Request.
-// Add a new story to the database. Includes both content and
+/*
+POST Request.
+Add a new story to the database. This includes content a description and a title.
+
+c: Fiber Context object (Pointer).
+
+db: PostgreSQL Database.
+
+An error will be returned if issues occur.
+*/
 func AddStory(c *fiber.Ctx, db *sql.DB) error {
 	fiberContext := c.Context()
 	ctx, cancel := context.WithTimeout(fiberContext, 3*time.Second)
@@ -109,8 +138,18 @@ func AddStory(c *fiber.Ctx, db *sql.DB) error {
 	return nil
 }
 
-// DELETE Request.
-// Remove a single story.
+/*
+DELETE Request.
+Remove a single story from the database.
+
+id: The story object in question.
+
+ctx: Fiber Context object (Pointer).
+
+db: *sql.DB
+
+An error will be returned if issues occur.
+*/
 func DeleteSingleStory(id string, ctx *fasthttp.RequestCtx, db *sql.DB) error {
 	basicContext, cancel := context.WithTimeout(ctx, 3*time.Second)
 	defer cancel()
@@ -123,8 +162,16 @@ func DeleteSingleStory(id string, ctx *fasthttp.RequestCtx, db *sql.DB) error {
 	return nil
 }
 
-// PUT Request.
-// Update the contents and information of a single story row.
+/*
+PUT Request.
+Update the contents and information of a single story row.
+
+ctx: Fiber Context object (Pointer).
+
+db: *sql.DB
+
+An error will be returned if issues occur.
+*/
 func UpdateStory(ctx *fiber.Ctx, db *sql.DB) error {
 	fiberContext := ctx.Context()
 	headers := ctx.GetReqHeaders()
