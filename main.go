@@ -1,7 +1,6 @@
 package main
 
 import (
-	"database/sql"
 	"errors"
 	"fmt"
 	"log"
@@ -9,36 +8,35 @@ import (
 
 	"github.com/joho/godotenv"
 	"github.com/tolubydesign/angular-story-backend/app/controller"
+	"github.com/tolubydesign/angular-story-backend/app/utils"
 
 	"github.com/gofiber/fiber/v2"
 
 	_ "github.com/lib/pq"
 )
 
-// TODO: redis logging system.
-const (
-	host     = "localhost"
-	port     = 5432
-	user     = "postgres"
-	password = "postgres"
-	dbname   = "postgres"
-)
-
 func main() {
 	var envs map[string]string
-	envs, err := godotenv.Read(".env")
+	envs, envErr := godotenv.Read(".env")
 	gottenEnv := os.Getenv("PORT")
 	environment := os.Getenv("ENV")
-	if err != nil {
+	if envErr != nil {
 		log.Fatal("Error loading .env file")
 	}
 
-	connection := fmt.Sprintf("postgresql://%v:%v@%v:%v/%v?sslmode=disable", user, password, host, port, dbname)
+	_, postgresErr := utils.ConnectToPostgreSQLDatabase()
+	if postgresErr != nil {
+		panic(postgresErr)
+	}
 
-	// Connect to database
-	db, err := sql.Open("postgres", connection)
-	if err != nil {
-		panic(err)
+	_, redisErr := utils.ConnectToRedisDatabase()
+	if redisErr != nil {
+		panic(redisErr)
+	}
+
+	postgresDatabase, getPostgresErr := utils.GetPostgreSQLDatabaseSingleton()
+	if getPostgresErr != nil {
+		panic(getPostgresErr)
 	}
 
 	environmentPort := envs["PORT"]
@@ -47,14 +45,14 @@ func main() {
 
 	app := SetupApplication()
 	controller.HandleCORS(app, environment)
-	controller.SetupMethods(app, db)
+	controller.SetupMethods(app, postgresDatabase)
 
 	if environmentPort == "" {
 		environmentPort = "2100"
 	}
 
-	if err = db.Ping(); err != nil {
-		panic(err)
+	if postgresErr = postgresDatabase.Ping(); postgresErr != nil {
+		panic(postgresErr)
 	}
 
 	log.Fatalln(app.Listen(fmt.Sprintf(":%v", environmentPort)))

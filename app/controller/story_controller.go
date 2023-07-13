@@ -10,6 +10,7 @@ import (
 
 	"github.com/tolubydesign/angular-story-backend/app/models"
 	"github.com/tolubydesign/angular-story-backend/app/queries"
+	"github.com/tolubydesign/angular-story-backend/app/utils"
 	"github.com/tolubydesign/angular-story-backend/pkg/response"
 
 	"github.com/gofiber/fiber/v2"
@@ -19,6 +20,11 @@ import (
 
 func AllStoriesHandlerRequest(ctx *fiber.Ctx, db *sql.DB) error {
 	stories, err := queries.GetAllStories(db)
+
+	redisErr := utils.ConsoleActionToRedisDatabase("Attempting to get all stories")
+	if redisErr != nil {
+		return fiber.NewError(fiber.StatusInternalServerError, redisErr.Error())
+	}
 
 	var storyArray []models.Story
 	for _, story := range stories {
@@ -49,6 +55,11 @@ func AllStoriesHandlerRequest(ctx *fiber.Ctx, db *sql.DB) error {
 
 	if err != nil {
 		panic(err)
+	}
+
+	redisErr = utils.ConsoleActionToRedisDatabase("Request to get all stories successful")
+	if redisErr != nil {
+		return fiber.NewError(fiber.StatusInternalServerError, redisErr.Error())
 	}
 
 	ctx.Response().StatusCode()
