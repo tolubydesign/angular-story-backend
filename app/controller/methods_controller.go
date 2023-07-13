@@ -31,24 +31,6 @@ func SetupMethods(app *fiber.App, db *sql.DB) {
 	app.Get("/health", func(c *fiber.Ctx) error {
 		return CheckHealth(c, db)
 	})
-
-	// app.Get("/", func(c *fiber.Ctx) error {
-	// 	return IndexHandler(c, db)
-	// })
-
-	// app.Post("/", func(c *fiber.Ctx) error {
-	// 	return PostHandler(c, db)
-	// })
-
-	// app.Put("/update", func(c *fiber.Ctx) error {
-	// 	return PutHandler(c, db)
-	// }, func(c *fiber.Ctx) error {
-	// 	return c.SendString(c.Params("id"))
-	// })
-
-	// app.Delete("/delete", func(c *fiber.Ctx) error {
-	// 	return DeleteHandler(c, db)
-	// })
 }
 
 func HandleCORS(app *fiber.App, environment string) {
