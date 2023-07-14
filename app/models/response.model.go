@@ -21,7 +21,8 @@ type HTTPError struct {
 	ErrorMessage interface{} `json:"errorMessage"`
 }
 
-type HTTPResponseStatusCode struct {
-	Status string `json:"status"`
-	Code   int    `json:"code"`
+type Response struct {
+	Status  string `json:"status"`
+	Code    int    `json:"code"`
+	Message string `json:"message"`
 }
