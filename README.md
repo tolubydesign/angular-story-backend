@@ -3,40 +3,34 @@ A CRUD REST API built with Golang
 
 Purpose
 -------
-This project is intended to showcase how to create a REST api using Golang...[discuss why you wanted to make the project]
-TODO: discuss how this was intended to be a Interactive story creator...
-
+This project is intended to showcase the use of a REST api built in GO.
+Users are allowed to create and edit stories.
+Stories need to be connected to a user's account.
+Users are able to share what they have created. A form of expression.
 
 # Overview
 
-TODO: change text \
-In the tutorial, we build a CRUD REST API from scratch using .NET 6.
-As you would expect, the backend system supports Creating, Reading, Updating and Deleting breakfasts. 
+This project is a CRUD REST API connected to a PostgreSQL and Redis database.
+The system supports Creating, Reading, Updating and Deleting stories.
 
-## Technologies
-...
-
-## Architecture
-...
+## Technologies, Libraries and Tools
+- Golang version >1.20.0
+- Go Fiber
+- Google uuid
+- Golang PostgreSQL (lib/pq)
+- Dot env (joho/godotenv)
+- Visual Studio
 
 # Usage
 
 Simply run `git clone https://github.com/tolubydesign/angular-story-backend.git` and `go run main.go`.
 
-## In Development
-__[x] Basic request__\
-__[o] JWT token__\
-__[o] User Profiles__\
-__[o] User login method__\
-__[o] ...__
-
-
 ## API Definition
 
 ```yml
-Location: {{host}}/Breakfasts/{{id}}
+Location: {{host}}/story
+Location: {{host}}/stories
 ```
-
 
 ### Get Story
 
@@ -295,6 +289,12 @@ or
 ```
 ---
 
+## In Development
+- Improved Error Response
+- Redis logging
+- JWT token
+- User Profiles
+- User login method
 
 ## Disclaimer
 This is an educational project. The source code is licensed under the MIT license.
