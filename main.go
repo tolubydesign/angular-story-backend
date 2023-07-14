@@ -8,7 +8,7 @@ import (
 
 	"github.com/joho/godotenv"
 	"github.com/tolubydesign/angular-story-backend/app/controller"
-	"github.com/tolubydesign/angular-story-backend/app/utils"
+	"github.com/tolubydesign/angular-story-backend/app/database"
 
 	"github.com/gofiber/fiber/v2"
 
@@ -24,17 +24,17 @@ func main() {
 		log.Fatal("Error loading .env file")
 	}
 
-	_, postgresErr := utils.ConnectToPostgreSQLDatabase()
+	_, postgresErr := database.ConnectToPostgreSQLDatabase()
 	if postgresErr != nil {
 		panic(postgresErr)
 	}
 
-	_, redisErr := utils.ConnectToRedisDatabase()
+	_, redisErr := database.ConnectToRedisDatabase()
 	if redisErr != nil {
 		panic(redisErr)
 	}
 
-	postgresDatabase, getPostgresErr := utils.GetPostgreSQLDatabaseSingleton()
+	postgresDatabase, getPostgresErr := database.GetPostgreSQLDatabaseSingleton()
 	if getPostgresErr != nil {
 		panic(getPostgresErr)
 	}
