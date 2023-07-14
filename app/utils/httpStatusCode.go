@@ -5,7 +5,7 @@ import (
 )
 
 // Get the relevant http response code and status.
-// Resource: https://developer.mozilla.org/en-US/docs/Web/HTTP/Status#server_error_responses
+// HTTP Status Response - [https://developer.mozilla.org/en-US/docs/Web/HTTP/Status#server_error_responses]
 func GetHTTPResponseStatusCode(code int) models.HTTPResponseStatusCode {
 	var status models.HTTPResponseStatusCode
 
