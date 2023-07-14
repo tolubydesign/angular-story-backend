@@ -1,9 +1,13 @@
 {
   "cSpell.words": [
+    "ctxt",
     "fasthttp",
     "fiber",
+    "godotenv",
     "gofiber",
+    "joho",
     "ossp",
-    "pgcrypto"
+    "pgcrypto",
+    "sslmode"
   ]
 }
