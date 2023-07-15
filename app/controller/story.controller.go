@@ -8,9 +8,9 @@ import (
 	"log"
 	"time"
 
+	database "github.com/tolubydesign/angular-story-backend/app/database"
 	"github.com/tolubydesign/angular-story-backend/app/models"
-	"github.com/tolubydesign/angular-story-backend/app/query"
-	"github.com/tolubydesign/angular-story-backend/app/database"
+	queries "github.com/tolubydesign/angular-story-backend/app/query"
 	"github.com/tolubydesign/angular-story-backend/pkg/response"
 
 	"github.com/gofiber/fiber/v2"
@@ -19,13 +19,13 @@ import (
 )
 
 func AllStoriesHandlerRequest(ctx *fiber.Ctx, db *sql.DB) error {
-	stories, err := queries.GetAllStories(db)
-
-	redisErr := database.ConsoleActionToRedisDatabase("Attempting to get all stories")
-	if redisErr != nil {
-		return fiber.NewError(fiber.StatusInternalServerError, redisErr.Error())
+	logErr := database.LogEvent("Attempting to get all stories")
+	if logErr != nil {
+		// TODO: create better http response
+		return fiber.NewError(fiber.StatusInternalServerError, logErr.Error())
 	}
 
+	stories, err := queries.GetAllStories(db)
 	var storyArray []models.Story
 	for _, story := range stories {
 		var content interface{}
@@ -54,12 +54,13 @@ func AllStoriesHandlerRequest(ctx *fiber.Ctx, db *sql.DB) error {
 	}
 
 	if err != nil {
+		// TODO Handle error response
 		panic(err)
 	}
 
-	redisErr = database.ConsoleActionToRedisDatabase("Request to get all stories successful")
-	if redisErr != nil {
-		return fiber.NewError(fiber.StatusInternalServerError, redisErr.Error())
+	logErr = database.LogEvent("Request to get all stories successful")
+	if logErr != nil {
+		return fiber.NewError(fiber.StatusInternalServerError, logErr.Error())
 	}
 
 	ctx.Response().StatusCode()
