@@ -4,9 +4,8 @@ import (
 	"errors"
 	"fmt"
 	"log"
-	"os"
 
-	"github.com/joho/godotenv"
+	"github.com/tolubydesign/angular-story-backend/app/config"
 	"github.com/tolubydesign/angular-story-backend/app/controller"
 	"github.com/tolubydesign/angular-story-backend/app/database"
 
@@ -16,11 +15,8 @@ import (
 )
 
 func main() {
-	var envs map[string]string
-	envs, envErr := godotenv.Read(".env")
-	gottenEnv := os.Getenv("PORT")
-	environment := os.Getenv("ENV")
-	if envErr != nil {
+	config, configError := config.GetConfiguration()
+	if configError != nil {
 		log.Fatal("Error loading .env file")
 	}
 
@@ -39,12 +35,13 @@ func main() {
 		panic(getPostgresErr)
 	}
 
-	environmentPort := envs["PORT"]
-	fmt.Printf("Port  = %v \n", environmentPort)
-	fmt.Printf("env port  = %v \n", gottenEnv)
+	environmentPort := config.Configuration.Port
+	env := config.Configuration.Environment
+	fmt.Printf("PORT  = %v \n", environmentPort)
+	fmt.Printf("ENV  = %v \n", env)
 
 	app := SetupApplication()
-	controller.HandleCORS(app, environment)
+	controller.HandleCORS(app, env)
 	controller.SetupMethods(app, postgresDatabase)
 
 	if environmentPort == "" {
