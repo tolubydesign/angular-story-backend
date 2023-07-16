@@ -65,6 +65,7 @@ func getTotalNumberOfLogs(eventType string) (int, error) {
 }
 
 // TODO: expand to include "warning" and "error"
+// TODO: request context
 /*
 Log information to redis database.
 
@@ -79,7 +80,6 @@ func LogEvent(information string) error {
 		return checkErr
 	}
 
-	fmt.Printf("total  = %v\n", iteration)
 	key := fmt.Sprintf("%s:%v", eventType, iteration)
 	context := context.Background()
 	t := time.Now()
@@ -90,7 +90,6 @@ func LogEvent(information string) error {
 	}
 
 	value := fmt.Sprintf("%v, %v", information, t.String())
-	// err := redisClientSingleton.RPush(context, "logging", inputInformation).Err()
 	err := redisClientSingleton.Set(context, key, value, time.Hour).Err()
 	if err != nil {
 		return err
