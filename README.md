@@ -291,7 +291,6 @@ or
 
 ## In Development
 - Improved Error Response
-- Redis logging
 - JWT token
 - User Profiles
 - User login method
