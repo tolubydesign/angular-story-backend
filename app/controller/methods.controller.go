@@ -9,15 +9,15 @@ import (
 
 func SetupMethods(app *fiber.App, db *sql.DB) {
 	app.Get("/stories", func(ctx *fiber.Ctx) error {
-		return AllStoriesHandlerRequest(ctx, db)
+		return GetAllStoriesRequest(ctx, db)
 	})
 
 	app.Get("/story", func(ctx *fiber.Ctx) error {
-		return RequestSingleStoryHandler(ctx, db)
+		return GetSingleStoryRequest(ctx, db)
 	})
 
 	app.Post("/story", func(ctx *fiber.Ctx) error {
-		return InsertStory(ctx, db)
+		return InsertStoryRequest(ctx, db)
 	})
 
 	app.Delete("/story", func(ctx *fiber.Ctx) error {
@@ -29,7 +29,7 @@ func SetupMethods(app *fiber.App, db *sql.DB) {
 	})
 
 	app.Get("/health", func(c *fiber.Ctx) error {
-		return CheckHealth(c, db)
+		return CheckHealthRequest(c, db)
 	})
 }
 
