@@ -42,3 +42,8 @@
 
 # Dependency directories (remove the comment below to include it)
 # vendor/
+
+# Built project location
+/bin
+build
+angular-story-backend

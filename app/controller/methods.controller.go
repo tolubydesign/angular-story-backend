@@ -9,15 +9,15 @@ import (
 
 func SetupMethods(app *fiber.App, db *sql.DB) {
 	app.Get("/stories", func(ctx *fiber.Ctx) error {
-		return AllStoriesHandlerRequest(ctx, db)
+		return GetAllStoriesRequest(ctx, db)
 	})
 
 	app.Get("/story", func(ctx *fiber.Ctx) error {
-		return RequestSingleStoryHandler(ctx, db)
+		return GetSingleStoryRequest(ctx, db)
 	})
 
 	app.Post("/story", func(ctx *fiber.Ctx) error {
-		return InsertStory(ctx, db)
+		return InsertStoryRequest(ctx, db)
 	})
 
 	app.Delete("/story", func(ctx *fiber.Ctx) error {
@@ -29,26 +29,8 @@ func SetupMethods(app *fiber.App, db *sql.DB) {
 	})
 
 	app.Get("/health", func(c *fiber.Ctx) error {
-		return CheckHealth(c, db)
+		return CheckHealthRequest(c, db)
 	})
-
-	// app.Get("/", func(c *fiber.Ctx) error {
-	// 	return IndexHandler(c, db)
-	// })
-
-	// app.Post("/", func(c *fiber.Ctx) error {
-	// 	return PostHandler(c, db)
-	// })
-
-	// app.Put("/update", func(c *fiber.Ctx) error {
-	// 	return PutHandler(c, db)
-	// }, func(c *fiber.Ctx) error {
-	// 	return c.SendString(c.Params("id"))
-	// })
-
-	// app.Delete("/delete", func(c *fiber.Ctx) error {
-	// 	return DeleteHandler(c, db)
-	// })
 }
 
 func HandleCORS(app *fiber.App, environment string) {
