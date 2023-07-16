@@ -64,32 +64,30 @@ func getTotalNumberOfLogs(eventType string) (int, error) {
 	return numeration, nil
 }
 
-// TODO: expand to include "warning" and "error"
-// TODO: request context
 /*
 Log information to redis database.
 
-How to Get All Keys in Redis - https://chartio.com/resources/tutorials/how-to-get-all-keys-in-redis/
+Resource: How to Get All Keys in Redis - https://chartio.com/resources/tutorials/how-to-get-all-keys-in-redis/
 
-Returns and error if found.
+Returning possible error.
 */
-func LogEvent(information string) error {
-	eventType := "logging"
-	iteration, checkErr := getTotalNumberOfLogs(eventType)
+func LogEvent(details string) error {
+	name := "logging"
+	iteration, checkErr := getTotalNumberOfLogs(name)
 	if checkErr != nil {
 		return checkErr
 	}
 
-	key := fmt.Sprintf("%s:%v", eventType, iteration)
+	key := fmt.Sprintf("%s:%v", name, iteration)
 	context := context.Background()
 	t := time.Now()
 	// var oneWeek time.Duration = 7 * 24 * 60 * 60      // 1 week = 7 days = 7×(24 hours) = 7×(24×(60 minutes)) = 7×(24×(60×(60 seconds))).
 	// var duration time.Duration = 1000000000 * oneWeek // Equals 1000 Milliseconds. Equals 1 second
 	if redisClientSingleton == nil {
-		return errors.New("Redis Client singleton is null")
+		return errors.New("Redis Client singleton is undefined")
 	}
 
-	value := fmt.Sprintf("%v, %v", information, t.String())
+	value := fmt.Sprintf("%v, %v", t.String(), details)
 	err := redisClientSingleton.Set(context, key, value, time.Hour).Err()
 	if err != nil {
 		return err
@@ -98,6 +96,60 @@ func LogEvent(information string) error {
 	return nil
 }
 
-func LogError() {}
+/*
+Log error details to redis database.
 
-func LogWarning() {}
+Returning possible error.
+*/
+func LogError(details string) error {
+	var err error
+	name := "error"
+	iteration, err := getTotalNumberOfLogs(name)
+	if err != nil {
+		return err
+	}
+
+	key := fmt.Sprintf("%s:%v", name, iteration)
+	context := context.Background()
+	t := time.Now()
+	if redisClientSingleton == nil {
+		return errors.New("Redis Client singleton is undefined")
+	}
+
+	value := fmt.Sprintf("%v, %v", t.String(), details)
+	err = redisClientSingleton.Set(context, key, value, time.Hour).Err()
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+/*
+Log warning details to redis database.
+
+Returning possible error.
+*/
+func LogWarning(details string) error {
+	var err error
+	name := "warning"
+	iteration, err := getTotalNumberOfLogs(name)
+	if err != nil {
+		return err
+	}
+
+	key := fmt.Sprintf("%s:%v", name, iteration)
+	context := context.Background()
+	t := time.Now()
+	if redisClientSingleton == nil {
+		return errors.New("Redis Client singleton is undefined")
+	}
+
+	value := fmt.Sprintf("%v, %v", t.String(), details)
+	err = redisClientSingleton.Set(context, key, value, time.Hour).Err()
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
