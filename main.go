@@ -1,60 +1,55 @@
 package main
 
 import (
-	"database/sql"
 	"errors"
 	"fmt"
 	"log"
-	"os"
 
-	"github.com/joho/godotenv"
+	"github.com/tolubydesign/angular-story-backend/app/config"
 	"github.com/tolubydesign/angular-story-backend/app/controller"
+	"github.com/tolubydesign/angular-story-backend/app/database"
 
 	"github.com/gofiber/fiber/v2"
 
 	_ "github.com/lib/pq"
 )
 
-// TODO: redis logging system.
-const (
-	host     = "localhost"
-	port     = 5432
-	user     = "postgres"
-	password = "postgres"
-	dbname   = "postgres"
-)
-
 func main() {
-	var envs map[string]string
-	envs, err := godotenv.Read(".env")
-	gottenEnv := os.Getenv("PORT")
-	environment := os.Getenv("ENV")
-	if err != nil {
+	config, configError := config.GetConfiguration()
+	if configError != nil {
 		log.Fatal("Error loading .env file")
 	}
 
-	connection := fmt.Sprintf("postgresql://%v:%v@%v:%v/%v?sslmode=disable", user, password, host, port, dbname)
-
-	// Connect to database
-	db, err := sql.Open("postgres", connection)
-	if err != nil {
-		panic(err)
+	_, postgresErr := database.ConnectToPostgreSQLDatabase()
+	if postgresErr != nil {
+		panic(postgresErr)
 	}
 
-	environmentPort := envs["PORT"]
-	fmt.Printf("Port  = %v \n", environmentPort)
-	fmt.Printf("env port  = %v \n", gottenEnv)
+	_, redisErr := database.ConnectToRedisDatabase()
+	if redisErr != nil {
+		panic(redisErr)
+	}
+
+	postgresDatabase, getPostgresErr := database.GetPostgreSQLDatabaseSingleton()
+	if getPostgresErr != nil {
+		panic(getPostgresErr)
+	}
+
+	environmentPort := config.Configuration.Port
+	env := config.Configuration.Environment
+	fmt.Printf("PORT  = %v \n", environmentPort)
+	fmt.Printf("ENV  = %v \n", env)
 
 	app := SetupApplication()
-	controller.HandleCORS(app, environment)
-	controller.SetupMethods(app, db)
+	controller.HandleCORS(app, env)
+	controller.SetupMethods(app, postgresDatabase)
 
 	if environmentPort == "" {
 		environmentPort = "2100"
 	}
 
-	if err = db.Ping(); err != nil {
-		panic(err)
+	if postgresErr = postgresDatabase.Ping(); postgresErr != nil {
+		panic(postgresErr)
 	}
 
 	log.Fatalln(app.Listen(fmt.Sprintf(":%v", environmentPort)))

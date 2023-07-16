@@ -8,13 +8,14 @@ import (
 	"log"
 	"time"
 
-	"github.com/gofiber/fiber/v2"
+	fiber "github.com/gofiber/fiber/v2"
 	_ "github.com/lib/pq"
-	"github.com/tolubydesign/angular-story-backend/app/models"
-	"github.com/tolubydesign/angular-story-backend/app/utils"
-	"github.com/valyala/fasthttp"
+	models "github.com/tolubydesign/angular-story-backend/app/models"
+	utils "github.com/tolubydesign/angular-story-backend/app/utils"
+	fasthttp "github.com/valyala/fasthttp"
 )
 
+// TODO: require jwt, user verification, user login and user related story objects
 /*
 Get all Story objects related to the user.
 
@@ -22,7 +23,7 @@ db: PostgreSQL Database.
 
 An error will be returned if issues occur. Otherwise all stories will be returned.
 
-TODO: require jwt, user verification, user login and user related story objects
+Return story array and possible error.
 */
 func GetAllStories(db *sql.DB) ([]models.Story, error) {
 	request := `select * from Story`
@@ -98,7 +99,7 @@ c: Fiber Context object (Pointer).
 
 db: PostgreSQL Database.
 
-An error will be returned if issues occur.
+Returning possible error.
 */
 func AddStory(c *fiber.Ctx, db *sql.DB) error {
 	fiberContext := c.Context()
@@ -148,7 +149,7 @@ ctx: Fiber Context object (Pointer).
 
 db: *sql.DB
 
-An error will be returned if issues occur.
+Returning possible error.
 */
 func DeleteSingleStory(id string, ctx *fasthttp.RequestCtx, db *sql.DB) error {
 	basicContext, cancel := context.WithTimeout(ctx, 3*time.Second)
@@ -170,7 +171,7 @@ ctx: Fiber Context object (Pointer).
 
 db: *sql.DB
 
-An error will be returned if issues occur.
+Returning possible error.
 */
 func UpdateStory(ctx *fiber.Ctx, db *sql.DB) error {
 	fiberContext := ctx.Context()

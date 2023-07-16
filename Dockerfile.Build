@@ -1,0 +1,21 @@
+# Resource: https://ably.com/blog/event-streaming-with-redis-and-golang
+FROM golang:latest as builder
+
+WORKDIR /app
+
+COPY go.mod go.sum ./
+
+# Download dependencies
+RUN go mod download
+
+# Copy from the current directory to the WORKDIR in the image
+COPY . .
+
+# Build the server
+RUN go build -v -o bin/build
+
+# Command to run the executable
+CMD ["./bin/build"]
+
+# Command
+# $ docker build -t go-redis-trading-server:latest .
