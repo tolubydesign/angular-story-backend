@@ -22,7 +22,7 @@ Returning redis client and possible error.
 */
 func ConnectToRedisDatabase() (*redis.Client, error) {
 	var err error
-	config, err := config.GetConfiguration()
+	config, err := config.GetProjectConfiguration()
 	if err != nil {
 		return nil, err
 	}

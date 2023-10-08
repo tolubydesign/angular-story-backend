@@ -1,6 +1,10 @@
 package config
 
 import (
+	"errors"
+	"fmt"
+	"os"
+
 	"github.com/joho/godotenv"
 )
 
@@ -36,15 +40,21 @@ type Config struct {
 	Configuration *DatabaseConfig
 }
 
+var configurationSingleton *Config
+
 // Build and return the environmental configuration.
 func GetConfiguration() (*Config, error) {
+	pgArgEnvironment := os.Args[1]
+	environmentPath := fmt.Sprintf(".env.%s", pgArgEnvironment)
+
+	// Note:
 	// Alternative method of getting a .env file
 	// gottenEnv := os.Getenv("PORT")
 	// environment := os.Getenv("ENV")
 	var envs map[string]string
-	envs, envErr := godotenv.Read(".env")
-	if envErr != nil {
-		return nil, envErr
+	envs, err := godotenv.Read(environmentPath)
+	if err != nil {
+		return nil, err
 	}
 
 	port := envs["PORT"]
@@ -68,7 +78,7 @@ func GetConfiguration() (*Config, error) {
 		DatabaseName: "postgres",
 	}
 
-	return &Config{
+	configurationSingleton = &Config{
 		Configuration: &DatabaseConfig{
 			Environment: environment,
 			Port:        port,
@@ -80,5 +90,15 @@ func GetConfiguration() (*Config, error) {
 			Redis:       redisConfiguration,
 			Postgres:    postgreSQLConfig,
 		},
-	}, nil
+	}
+
+	return configurationSingleton, nil
+}
+
+func GetProjectConfiguration() (*Config, error) {
+	if configurationSingleton == nil {
+		return nil, errors.New("Project Configuration is undefined")
+	}
+
+	return configurationSingleton, nil
 }
