@@ -15,6 +15,7 @@ import (
 )
 
 func main() {
+	// Setup project configuration
 	config, configError := config.GetConfiguration()
 	if configError != nil {
 		log.Fatal("Error loading .env file")
