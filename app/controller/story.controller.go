@@ -10,7 +10,7 @@ import (
 
 	database "github.com/tolubydesign/angular-story-backend/app/database"
 	"github.com/tolubydesign/angular-story-backend/app/models"
-	queries "github.com/tolubydesign/angular-story-backend/app/query"
+	query "github.com/tolubydesign/angular-story-backend/app/query"
 	"github.com/tolubydesign/angular-story-backend/app/utils"
 	"github.com/tolubydesign/angular-story-backend/pkg/response"
 
@@ -32,7 +32,7 @@ func GetAllStoriesRequest(ctx *fiber.Ctx, db *sql.DB) error {
 		return fiber.NewError(fiber.StatusInternalServerError, error.Error())
 	}
 
-	stories, err := queries.GetAllStories(db)
+	stories, err := query.GetAllStories(db)
 	var storyArray []models.Story
 	for _, story := range stories {
 		var content interface{}
@@ -93,7 +93,7 @@ func GetSingleStoryRequest(ctx *fiber.Ctx, db *sql.DB) error {
 		return fiber.NewError(fiber.StatusInternalServerError, error.Error())
 	}
 
-	story, error := queries.GetSingleStory(headerId, context, db)
+	story, error := query.GetSingleStory(headerId, context, db)
 	if error != nil {
 		panic(error)
 	}
@@ -176,7 +176,7 @@ func InsertStoryRequest(c *fiber.Ctx, db *sql.DB) error {
 	}
 
 	// TODO: verify that information being sent in is valid json
-	err := queries.AddStory(c, db)
+	err := query.AddStory(c, db)
 	if err != nil {
 		log.Fatalf("Insert Story Fatal Error - %s", err)
 	}
@@ -213,7 +213,7 @@ func DeleteStoryRequest(c *fiber.Ctx, db *sql.DB) error {
 		return fiber.NewError(fiber.StatusInternalServerError, error.Error())
 	}
 
-	err := queries.DeleteSingleStory(id, context, db)
+	err := query.DeleteSingleStory(id, context, db)
 	if err != nil {
 		log.Fatalf("Delete Story Fatal Error - %s", err)
 	}
@@ -251,7 +251,7 @@ func UpdateStoryRequest(c *fiber.Ctx, db *sql.DB) error {
 		return fiber.NewError(fiber.StatusInternalServerError, error.Error())
 	}
 
-	queryError := queries.UpdateStory(c, db)
+	queryError := query.UpdateStory(c, db)
 	if queryError != nil {
 		return response.BasicErrorHandling(c, queryError)
 	}

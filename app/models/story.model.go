@@ -12,8 +12,8 @@ type StoryContent struct {
 }
 type Story struct {
 	Id          uuid.UUID   `json:"id" validate:"uuid"`
-	Title       *string     `json:"title" validate:"required"`
-	Description *string     `json:"description" validate:"required"`
+	Title       string     `json:"title" validate:"required"`
+	Description string     `json:"description" validate:"required"`
 	Content     interface{} `json:"content"` // type *StoryContent
 }
 
