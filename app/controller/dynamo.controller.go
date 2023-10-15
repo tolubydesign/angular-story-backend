@@ -1,0 +1,67 @@
+package controller
+
+import (
+	"errors"
+	"fmt"
+
+	"github.com/aws/aws-sdk-go-v2/service/dynamodb"
+	"github.com/gofiber/fiber/v2"
+	database "github.com/tolubydesign/angular-story-backend/app/database"
+	models "github.com/tolubydesign/angular-story-backend/app/models"
+	query "github.com/tolubydesign/angular-story-backend/app/query"
+)
+
+/*
+Get client connection to dynamodb.
+*/
+func ConnectDynamoDB() (*dynamodb.Client, error) {
+	// Connect to PostgreSQL database
+	client, err := database.CreateDynamoClient()
+	if err != nil {
+		return nil, err
+	}
+
+	return client, nil
+}
+
+/*
+Creating a new table
+{...}
+*/
+func CreateNewTable(ctx *fiber.Ctx, client *dynamodb.Client) error {
+	if client == nil {
+		return errors.New("DynamoDB inaccessible")
+	}
+
+	// TODO: get table name from request context. For now use hardcoded value
+	// TODO: get function parameters from request context
+	// TODO: use table.CreateDynamoDBTable to dynamically create new tables, when needed
+	return nil
+}
+
+func GetAllDynamoDBTables(ctx *fiber.Ctx, client *dynamodb.Client) error {
+	fmt.Printf("Getting all tables within the dynamo database")
+
+	tableName := "Story"
+	table := query.TableBasics{
+		DynamoDbClient: client,
+		TableName:      tableName,
+	}
+
+	tables, err := table.ListDynamodbTables()
+
+	if err != nil {
+		// Return error to user
+		return fiber.NewError(fiber.StatusInternalServerError, error.Error(err))
+	}
+
+	response := models.JSONResponse{
+		Type:    "success",
+		Data:    tables,
+		Message: "Tables found in DynamoDB.",
+	}
+
+	ctx.Response().StatusCode()
+	ctx.Response().Header.Add("Content-Type", "application/json")
+	return ctx.JSON(response)
+}

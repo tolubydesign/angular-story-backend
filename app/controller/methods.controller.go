@@ -31,6 +31,8 @@ func SetupMethods(app *fiber.App, db *sql.DB) {
 	app.Get("/health", func(c *fiber.Ctx) error {
 		return CheckHealthRequest(c, db)
 	})
+
+	SetupDynamoDBMethods(app)
 }
 
 func HandleCORS(app *fiber.App, environment string) {
@@ -51,4 +53,29 @@ func HandleCORS(app *fiber.App, environment string) {
 
 	// Or extend your config for customization
 	app.Use(cors.New(configuration))
+}
+
+
+/*
+Setup dynamodb relate methods and requests.
+Connects to dynamodb database. If a connection is not made, process will error out.
+
+Returns error if connection to dynamodb is incorrect/insufficient OR method cannot be created.
+*/
+func SetupDynamoDBMethods(app *fiber.App) error {
+	// Get client
+	client, err := ConnectDynamoDB()
+	if err != nil {
+		return err
+	}
+
+	app.Post("/dynamo-table", func(ctx *fiber.Ctx) error {
+		return CreateNewTable(ctx, client)
+	})
+
+	app.Get("/dynamodb-list-tables", func(ctx *fiber.Ctx) error {
+		return GetAllDynamoDBTables(ctx, client)
+	})
+
+	return nil
 }

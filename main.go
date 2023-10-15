@@ -16,21 +16,25 @@ import (
 
 func main() {
 	// Setup project configuration
-	config, configError := config.GetConfiguration()
-	if configError != nil {
-		log.Fatal("Error loading .env file")
+	config, err := config.BuildConfiguration()
+	if err != nil {
+		log.Fatal(err)
+		panic(err)
 	}
 
+	// Connect to PostgreSQL database
 	_, postgresErr := database.ConnectToPostgreSQLDatabase()
 	if postgresErr != nil {
 		panic(postgresErr)
 	}
 
+	// Connect to Redis database
 	_, redisErr := database.ConnectToRedisDatabase()
 	if redisErr != nil {
 		panic(redisErr)
 	}
 
+	// Capture the connected postgreSQL database
 	postgresDatabase, getPostgresErr := database.GetPostgreSQLDatabaseSingleton()
 	if getPostgresErr != nil {
 		panic(getPostgresErr)
