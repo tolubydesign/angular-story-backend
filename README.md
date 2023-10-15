@@ -300,3 +300,12 @@ This is an educational project. The source code is licensed under the MIT licens
 
 ## License
 This library is distributed under the [MIT](LICENSE) license.
+
+## TODO
+
+- [x] User development and production env to handle secret information
+- [-] Create Dynamodb docker container
+- [-] Switch to Dynamodb, move from PostgreSQL database to dynamodb
+- [-] Automatically setup database with dummy information
+- [-] dynamodb database health checks
+- [-] 
