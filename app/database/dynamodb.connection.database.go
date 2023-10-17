@@ -160,7 +160,7 @@ func SetupStoryDatabase(client *dynamodb.Client) error {
 	tableDescription, err := table.CreateDynamoDBTable(mutation.CreateTableStruct{
 		// Add attribute definition
 		AttributeDefinition: []types.AttributeDefinition{{
-			AttributeName: aws.String("storyId"),
+			AttributeName: aws.String("id"),
 			AttributeType: types.ScalarAttributeTypeS,
 		}, {
 			AttributeName: aws.String("title"),
@@ -168,7 +168,7 @@ func SetupStoryDatabase(client *dynamodb.Client) error {
 		}},
 		// Add key schema
 		KeySchemaElement: []types.KeySchemaElement{{
-			AttributeName: aws.String("storyId"),
+			AttributeName: aws.String("id"),
 			KeyType:       types.KeyTypeHash,
 		}, {
 			AttributeName: aws.String("title"),

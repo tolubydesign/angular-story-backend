@@ -8,6 +8,8 @@ import (
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/dynamodb"
+
+	UUID "github.com/google/uuid"
 	"github.com/tolubydesign/angular-story-backend/app/models"
 	"github.com/tolubydesign/angular-story-backend/app/mutation"
 )
@@ -17,8 +19,15 @@ func PopulateStoryDatabase(table mutation.TableBasics) error {
 	// Log actions
 	fmt.Println("Populating database with stories")
 
+	uuid01, err := UUID.NewUUID()
+	// uuid01, err := exec.Command("uuidgen").Output()
+	if err != nil {
+		return err
+	}
+
 	// Upload stories
-	err = table.AddStory(models.Story{
+	err = table.AddStory(models.DynamoStoryStruct{
+		Id:          fmt.Sprintf("%s", uuid01),
 		Title:       "descriptive title",
 		Description: "descriptive description text",
 		Content: `{
@@ -232,7 +241,14 @@ func PopulateStoryDatabase(table mutation.TableBasics) error {
 		return err
 	}
 
-	err = table.AddStory(models.Story{
+	uuid02, err := UUID.NewUUID()
+	// uuid02, err := exec.Command("uuidgen").Output()
+	if err != nil {
+		return err
+	}
+
+	err = table.AddStory(models.DynamoStoryStruct{
+		Id:          fmt.Sprintf("%s", uuid02),
 		Title:       "Porttitor quis ultrices tortor",
 		Description: "Nullam non tempor nisi, ut porta ex. Aenean non mi et nibh feugiat congue id et lacus.",
 		Content: `{
@@ -526,9 +542,17 @@ func PopulateStoryDatabase(table mutation.TableBasics) error {
 		return err
 	}
 
-	err = table.AddStory(models.Story{
-		Title:       "website request description",
-		Description: "website request title",
+	uuid03, err := UUID.NewUUID()
+	// NOTE: alternative method of creating a uuid
+	// uuid03, err := exec.Command("uuidgen").Output()
+	if err != nil {
+		return err
+	}
+
+	err = table.AddStory(models.DynamoStoryStruct{
+		Id:          fmt.Sprintf("%s", uuid03),
+		Title:       "website request title",
+		Description: "website request description",
 		Content: `{
 			"description": "In aliquet nisi a.",
 			"id": "08fd4949-50dd-460f-96d8-d208414c2d05",
@@ -567,16 +591,16 @@ func PopulateStoryDatabase(table mutation.TableBasics) error {
 func waitForTable(ctx context.Context, db *dynamodb.Client, tn string) error {
 	w := dynamodb.NewTableExistsWaiter(db)
 	err := w.Wait(ctx,
-			&dynamodb.DescribeTableInput{
-					TableName: aws.String(tn),
-			},
-			2*time.Minute,
-			func(o *dynamodb.TableExistsWaiterOptions) {
-					o.MaxDelay = 5 * time.Second
-					o.MinDelay = 5 * time.Second
-			})
+		&dynamodb.DescribeTableInput{
+			TableName: aws.String(tn),
+		},
+		2*time.Minute,
+		func(o *dynamodb.TableExistsWaiterOptions) {
+			o.MaxDelay = 5 * time.Second
+			o.MinDelay = 5 * time.Second
+		})
 	if err != nil {
-			return errors.New("timed out while waiting for table to become active")
+		return errors.New("timed out while waiting for table to become active")
 	}
 
 	return err

@@ -7,7 +7,9 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/dynamodb"
 	"github.com/gofiber/fiber/v2"
 	database "github.com/tolubydesign/angular-story-backend/app/database"
+	"github.com/tolubydesign/angular-story-backend/app/helpers"
 	models "github.com/tolubydesign/angular-story-backend/app/models"
+	"github.com/tolubydesign/angular-story-backend/app/mutation"
 	query "github.com/tolubydesign/angular-story-backend/app/query"
 )
 
@@ -64,4 +66,16 @@ func GetAllDynamoDBTables(ctx *fiber.Ctx, client *dynamodb.Client) error {
 	ctx.Response().StatusCode()
 	ctx.Response().Header.Add("Content-Type", "application/json")
 	return ctx.JSON(response)
+}
+
+func PopulateDynamoDatabase(ctx *fiber.Ctx, client *dynamodb.Client) error {
+	fmt.Println("Adding default data to the dynamo database")
+	tableName := "Story"
+	table := mutation.TableBasics{
+		DynamoDbClient: client,
+		TableName:      tableName,
+	}
+
+	helpers.PopulateStoryDatabase(table)
+	return nil
 }

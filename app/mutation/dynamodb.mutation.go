@@ -112,10 +112,6 @@ func (client TableBasics) CreateDynamoDBTable(tableStruct CreateTableStruct) (*t
 
 		TableName: aws.String(client.TableName),
 
-		// LocalSecondaryIndexes: []types.LocalSecondaryIndex{{
-		// 	IndexName: "ForeignLanguageSupportIndex",
-		// 	KeySchema: types.KeyTypeRange,
-		// }},
 		ProvisionedThroughput: &types.ProvisionedThroughput{
 			ReadCapacityUnits:  aws.Int64(10),
 			WriteCapacityUnits: aws.Int64(10),
@@ -151,11 +147,12 @@ func DeleteDynamoDBTable(client *dynamodb.Client) error {
 
 // TODO: add multiple
 // Add a story the DynamoDB table.
-func (basics TableBasics) AddStory(story models.Story) error {
+func (basics TableBasics) AddStory(story models.DynamoStoryStruct) error {
 	fmt.Println("Adding story to database.")
+
 	item, err := attributevalue.MarshalMap(story)
 	if err != nil {
-		panic(err)
+		return err
 	}
 	_, err = basics.DynamoDbClient.PutItem(context.TODO(), &dynamodb.PutItemInput{
 		TableName: aws.String(basics.TableName), Item: item,

@@ -55,18 +55,17 @@ func HandleCORS(app *fiber.App, environment string) {
 	app.Use(cors.New(configuration))
 }
 
-
 /*
 Setup dynamodb relate methods and requests.
 Connects to dynamodb database. If a connection is not made, process will error out.
 
 Returns error if connection to dynamodb is incorrect/insufficient OR method cannot be created.
 */
-func SetupDynamoDBMethods(app *fiber.App) error {
+func SetupDynamoDBMethods(app *fiber.App) {
 	// Get client
 	client, err := ConnectDynamoDB()
 	if err != nil {
-		return err
+		panic(err)
 	}
 
 	app.Post("/dynamo-table", func(ctx *fiber.Ctx) error {
@@ -77,5 +76,7 @@ func SetupDynamoDBMethods(app *fiber.App) error {
 		return GetAllDynamoDBTables(ctx, client)
 	})
 
-	return nil
+	app.Post("/dynamo-add-default-stories", func(ctx *fiber.Ctx) error {
+		return PopulateDynamoDatabase(ctx, client)
+	})
 }
