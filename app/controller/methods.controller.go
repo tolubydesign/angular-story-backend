@@ -79,4 +79,8 @@ func SetupDynamoDBMethods(app *fiber.App) {
 	app.Post("/dynamo-add-default-stories", func(ctx *fiber.Ctx) error {
 		return PopulateDynamoDatabase(ctx, client)
 	})
+
+	app.Get("/dynamo-list-stories", func(ctx *fiber.Ctx) error {
+		return ListAllStories(ctx, client)
+	})
 }

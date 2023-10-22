@@ -7,7 +7,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/dynamodb"
 	"github.com/gofiber/fiber/v2"
 	database "github.com/tolubydesign/angular-story-backend/app/database"
-	"github.com/tolubydesign/angular-story-backend/app/helpers"
+	helpers "github.com/tolubydesign/angular-story-backend/app/helpers"
 	models "github.com/tolubydesign/angular-story-backend/app/models"
 	"github.com/tolubydesign/angular-story-backend/app/mutation"
 	query "github.com/tolubydesign/angular-story-backend/app/query"
@@ -32,7 +32,7 @@ Creating a new table
 */
 func CreateNewTable(ctx *fiber.Ctx, client *dynamodb.Client) error {
 	if client == nil {
-		return errors.New("DynamoDB inaccessible")
+		return errors.New("Dynamo Database inaccessible.")
 	}
 
 	// TODO: get table name from request context. For now use hardcoded value
@@ -78,4 +78,33 @@ func PopulateDynamoDatabase(ctx *fiber.Ctx, client *dynamodb.Client) error {
 
 	helpers.PopulateStoryDatabase(table)
 	return nil
+}
+
+func ListAllStories(ctx *fiber.Ctx, client *dynamodb.Client) error {
+	if client == nil {
+		return errors.New(helpers.DynamodbResponseMessages["nilClient"])
+	}
+
+	tableName := "Story"
+	table := query.TableBasics{
+		DynamoDbClient: client,
+		TableName:      tableName,
+	}
+
+	items, err := table.FullTableScan()
+
+	if err != nil {
+		// Return error to user
+		return fiber.NewError(fiber.StatusInternalServerError, error.Error(err))
+	}
+
+	response := models.JSONResponse{
+		Type:    "success",
+		Data:    items,
+		Message: "Request successful",
+	}
+
+	ctx.Response().StatusCode()
+	ctx.Response().Header.Add("Content-Type", "application/json")
+	return ctx.JSON(response)
 }

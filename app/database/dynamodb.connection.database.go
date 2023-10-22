@@ -180,7 +180,7 @@ func SetupStoryDatabase(client *dynamodb.Client) error {
 		return err
 	}
 
-	fmt.Printf("\n Information about newly created dynamodb table, %v", tableDescription)
+	fmt.Printf("\nInformation about newly created dynamodb table, %v", tableDescription)
 	err = helpers.PopulateStoryDatabase(table)
 	if err != nil {
 		return err
