@@ -76,8 +76,21 @@ func PopulateDynamoDatabase(ctx *fiber.Ctx, client *dynamodb.Client) error {
 		TableName:      tableName,
 	}
 
-	helpers.PopulateStoryDatabase(table)
-	return nil
+	err := helpers.PopulateStoryDatabase(table)
+	if err != nil {
+		// Return error to user
+		return fiber.NewError(fiber.StatusInternalServerError, error.Error(err))
+	}
+
+	response := models.JSONResponse{
+		Type:    "success",
+		Data:    nil,
+		Message: "Request successful",
+	}
+
+	ctx.Response().StatusCode()
+	ctx.Response().Header.Add("Content-Type", "application/json")
+	return ctx.JSON(response)
 }
 
 /*
