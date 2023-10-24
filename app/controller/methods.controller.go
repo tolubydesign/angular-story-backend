@@ -59,7 +59,7 @@ func HandleCORS(app *fiber.App, environment string) {
 Setup dynamodb relate methods and requests.
 Connects to dynamodb database. If a connection is not made, process will error out.
 
-Returns error if connection to dynamodb is incorrect/insufficient OR method cannot be created.
+@returns - Error if connection to dynamodb is incorrect/insufficient OR method cannot be created.
 */
 func SetupDynamoDBMethods(app *fiber.App) {
 	// Get client
