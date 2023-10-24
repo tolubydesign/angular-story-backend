@@ -23,8 +23,8 @@ type AllStories struct {
 }
 
 type DynamoStoryStruct struct {
-	Id          string      `dynamodbav:"id"`
-	Title       string      `dynamodbav:"title"`
-	Description string      `dynamodbav:"description"`
-	Content     interface{} `dynamodbav:"content"`
+	Id          string        `json:"id"`
+	Title       string        `json:"title"`
+	Description string        `json:"description"`
+	Content     *StoryContent `json:"content"`
 }

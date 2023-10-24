@@ -1,7 +1,6 @@
 package controller
 
 import (
-	"encoding/json"
 	"errors"
 	"fmt"
 
@@ -103,25 +102,6 @@ func ListAllStories(ctx *fiber.Ctx, client *dynamodb.Client) error {
 	}
 
 	items, err := table.FullTableScan()
-	var storyArray []models.DynamoStoryStruct
-	for _, story := range items {
-		var content interface{}
-		// Convert string Content into JSON (parse) Content
-		if story.Content != nil {
-			str := fmt.Sprintf("%s", story.Content)
-			byt := []byte(str)
-			json.Unmarshal(byt, &content)
-		}
-
-		returningStoryModel := models.DynamoStoryStruct{
-			Id:          story.Id,
-			Title:       story.Title,
-			Description: story.Description,
-			Content:     content,
-		}
-
-		storyArray = append(storyArray, returningStoryModel)
-	}
 
 	if err != nil {
 		// Return error to user
@@ -130,7 +110,7 @@ func ListAllStories(ctx *fiber.Ctx, client *dynamodb.Client) error {
 
 	response := models.JSONResponse{
 		Type:    "success",
-		Data:    storyArray,
+		Data:    items,
 		Message: "Request successful",
 	}
 

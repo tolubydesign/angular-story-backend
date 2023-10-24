@@ -35,7 +35,7 @@ func GetAllStoriesRequest(ctx *fiber.Ctx, db *sql.DB) error {
 	stories, err := query.GetAllStories(db)
 	var storyArray []models.Story
 	for _, story := range stories {
-		var content interface{}
+		var content *models.StoryContent
 		if story.Content != nil {
 			// NOTE: look at https://go.dev/src/cmd/vet/testdata/print/print.go and https://pkg.go.dev/fmt#hdr-Printing
 			// to address error "fmt.Sprintf format %s has arg story.Content of wrong type"
@@ -99,7 +99,7 @@ func GetSingleStoryRequest(ctx *fiber.Ctx, db *sql.DB) error {
 	}
 
 	// Convert JSON to Struct
-	var content interface{}
+	var content *models.StoryContent
 	if story.Content != nil {
 		// NOTE: look at https://go.dev/src/cmd/vet/testdata/print/print.go and https://pkg.go.dev/fmt#hdr-Printing
 		// to address error "fmt.Sprintf format %s has arg story.Content of wrong type"
