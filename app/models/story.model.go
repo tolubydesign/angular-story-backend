@@ -22,9 +22,20 @@ type AllStories struct {
 	Story []Story `json:"story"`
 }
 
-type DynamoStoryStruct struct {
+type DynamoStoryResponseStruct struct {
 	Id          string        `json:"id"`
 	Title       string        `json:"title"`
 	Description string        `json:"description"`
 	Content     *StoryContent `json:"content"`
+}
+
+type DynamodbStoryInitialisationStruct struct {
+	Id          string        `dynamodbav:"id"`
+	Title       string        `dynamodbav:"title"`
+	Description string        `dynamodbav:"description"`
+	Content     *StoryContent `dynamodbav:"content"`
+}
+
+type User struct {
+	Id string `json:"id"`
 }
