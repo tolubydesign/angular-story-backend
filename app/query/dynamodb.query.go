@@ -83,8 +83,10 @@ func (basics TableBasics) ScanByExpression(startYear int, endYear int) ([]models
 	return stories, err
 }
 
-// TODO: add description
-// {...}
+/*
+TODO: add description
+{...}
+*/
 func (basics TableBasics) FullTableScan() ([]models.DynamoStoryStruct, error) {
 	var stories []models.DynamoStoryStruct
 	var err error
@@ -93,10 +95,6 @@ func (basics TableBasics) FullTableScan() ([]models.DynamoStoryStruct, error) {
 		TableName:              aws.String(basics.TableName),
 		ReturnConsumedCapacity: types.ReturnConsumedCapacityTotal,
 	})
-
-	// if err != nil {
-	// 	log.Fatal("Scan failed", err)
-	// }
 
 	if err != nil {
 		// log.Printf("\nCouldn't scan for stories. Error: %v\n", err)
@@ -109,21 +107,10 @@ func (basics TableBasics) FullTableScan() ([]models.DynamoStoryStruct, error) {
 		return nil, err
 	}
 
-	// for _, i := range response.Items {
-	// 	var u models.DynamoStoryStruct
-	// 	err := attributevalue.UnmarshalMap(i, &u)
-	// 	if err != nil {
-	// 		log.Fatal("unmarshal failed", err)
-	// 	}
-	// }
-
 	if response.LastEvaluatedKey != nil {
 		log.Println("all items have not been scanned")
 		return nil, errors.New("All items have not been scanned")
 	}
-
-	// log.Println("scanned", response.ScannedCount, "items in", time.Since(startTime).Seconds(), "seconds")
-	// log.Println("consumed capacity", *response.ConsumedCapacity.CapacityUnits)
 
 	return stories, nil
 }
