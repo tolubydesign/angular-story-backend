@@ -2,9 +2,10 @@ package helpers
 
 import (
 	"fmt"
-	"github.com/google/uuid"
 	"log"
 	"os/exec"
+
+	"github.com/google/uuid"
 )
 
 func GoogleGenerateUUID() string {
@@ -20,4 +21,10 @@ func OSGenerateUUID() string {
 
 	fmt.Printf("%s", uuid)
 	return fmt.Sprintf("%s", uuid)
+}
+
+func GenerateStringUUID() string {
+	str := uuid.New().String()
+	fmt.Println("id:", str)
+	return str
 }

@@ -46,8 +46,8 @@ func (basics TableBasics) ListDynamodbTables() ([]string, error) {
 // and projects them to return a reduced set of fields.
 // The function uses the `expression` package to build the filter and projection
 // expressions.
-func (basics TableBasics) ScanByExpression(startYear int, endYear int) ([]models.DynamoStoryStruct, error) {
-	var stories []models.DynamoStoryStruct
+func (basics TableBasics) ScanByExpression(startYear int, endYear int) ([]models.DynamoStoryResponseStruct, error) {
+	var stories []models.DynamoStoryResponseStruct
 	var err error
 	var response *dynamodb.ScanOutput
 
@@ -87,8 +87,8 @@ func (basics TableBasics) ScanByExpression(startYear int, endYear int) ([]models
 TODO: add description
 {...}
 */
-func (basics TableBasics) FullTableScan() ([]models.DynamoStoryStruct, error) {
-	var stories []models.DynamoStoryStruct
+func (basics TableBasics) FullTableScan() ([]models.DynamoStoryResponseStruct, error) {
+	var stories []models.DynamoStoryResponseStruct
 	var err error
 
 	response, err := basics.DynamoDbClient.Scan(context.TODO(), &dynamodb.ScanInput{
