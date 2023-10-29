@@ -304,8 +304,12 @@ This library is distributed under the [MIT](LICENSE) license.
 ## TODO
 
 - [x] User development and production env to handle secret information
-- [-] Create Dynamodb docker container
-- [-] Switch to Dynamodb, move from PostgreSQL database to dynamodb
-- [-] Automatically setup database with dummy information
-- [-] dynamodb database health checks
-- [-] 
+- [x] Create Dynamodb docker container
+- [ ] Switch to Dynamodb, move from PostgreSQL database to dynamodb
+- [x] Automatically setup database with dummy Story information
+- [ ] Automatically setup database with dummy User information
+- [ ] dynamodb database health checks
+- [ ] Create Users in Dynamodb
+- [ ] Structure database to use user id to restrict story data access
+- [ ] Put (update) request. Dynamodb request
+- [ ] Post (add) request. Dynamodb request
