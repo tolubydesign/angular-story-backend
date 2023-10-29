@@ -23,13 +23,13 @@ type AllStories struct {
 }
 
 type DynamoStoryResponseStruct struct {
-	Id          string        `json:"id"`
-	Title       string        `json:"title"`
-	Description string        `json:"description"`
+	Id          string        `json:"id" validate:"uuid"`
+	Title       string        `json:"title" validate:"required"`
+	Description string        `json:"description" validate:"required"`
 	Content     *StoryContent `json:"content"`
 }
 
-type DynamodbStoryInitialisationStruct struct {
+type DynamoStoryDatabaseStruct struct {
 	Id          string        `dynamodbav:"id"`
 	Title       string        `dynamodbav:"title"`
 	Description string        `dynamodbav:"description"`
@@ -37,5 +37,19 @@ type DynamodbStoryInitialisationStruct struct {
 }
 
 type User struct {
-	Id string `json:"id"`
+	Id       string  `json:"id" validate:"uuid"`
+	Username string  `json:"username" validate:"required"`
+	Name     *string `json:"name"`
+	Surname  *string `json:"surname"`
+	Email    string  `json:"email" validate:"required"`
+	Password string  `json:"password" validate:"required"`
+}
+
+type DatabaseUserStruct struct {
+	Id       string  `dynamodbav:"id" validate:"uuid"`
+	Username string  `dynamodbav:"username" validate:"required"`
+	Name     *string `dynamodbav:"name"`
+	Surname  *string `dynamodbav:"surname"`
+	Email    string  `dynamodbav:"email" validate:"required"`
+	Password string  `dynamodbav:"password" validate:"required"`
 }
