@@ -26,7 +26,7 @@ func PopulateStoryDatabase(table mutation.TableBasics) error {
 	fmt.Println("Populating database with stories.")
 
 	// Upload stories
-	err = table.AddStory(models.DynamodbStoryInitialisationStruct{
+	err = table.AddStory(models.DynamoStoryDatabaseStruct{
 		Id:          GenerateStringUUID(),
 		Title:       "descriptive title",
 		Description: "descriptive description text",
@@ -93,18 +93,17 @@ func PopulateStoryDatabase(table mutation.TableBasics) error {
 		return err
 	}
 
-	err = table.AddStory(models.DynamodbStoryInitialisationStruct{
+	err = table.AddStory(models.DynamoStoryDatabaseStruct{
 		Id:          GenerateStringUUID(),
 		Title:       "Porttitor quis ultrices tortor",
 		Description: "Nullam non tempor nisi, ut porta ex. Aenean non mi et nibh feugiat congue id et lacus.",
-		Content:     nil,
-	})
+		Content:     nil})
 
 	if err != nil {
 		return err
 	}
 
-	err = table.AddStory(models.DynamodbStoryInitialisationStruct{
+	err = table.AddStory(models.DynamoStoryDatabaseStruct{
 		Id:          GenerateStringUUID(),
 		Title:       "website request title",
 		Description: "website request description",

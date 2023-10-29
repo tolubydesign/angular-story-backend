@@ -68,16 +68,24 @@ func SetupDynamoDBMethods(app *fiber.App) {
 		panic(err)
 	}
 
-	app.Post("/dynamo-table", func(ctx *fiber.Ctx) error {
-		return CreateNewTable(ctx, client)
-	})
+	// app.Post("/dynamo-table", func(ctx *fiber.Ctx) error {
+	// 	return CreateNewTable(ctx, client)
+	// })
 
 	app.Get("/dynamodb-list-tables", func(ctx *fiber.Ctx) error {
 		return GetAllDynamoDBTables(ctx, client)
 	})
 
-	app.Post("/dynamo-add-default-stories", func(ctx *fiber.Ctx) error {
+	app.Post("/dynamo-populate-database", func(ctx *fiber.Ctx) error {
 		return PopulateDynamoDatabase(ctx, client)
+	})
+
+	app.Post("/dynamo-add-story", func (ctx *fiber.Ctx) error {
+		return AddStoryRequest(ctx, client)
+	})
+
+	app.Get("/dynamo-get-story", func (ctx *fiber.Ctx) error {
+		return GetStoryByIdRequest(ctx, client)
 	})
 
 	app.Get("/dynamo-list-stories", func(ctx *fiber.Ctx) error {

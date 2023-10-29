@@ -6,13 +6,13 @@ import (
 	"log"
 
 	"github.com/tolubydesign/angular-story-backend/app/models"
+	"github.com/tolubydesign/angular-story-backend/app/mutation"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/feature/dynamodb/attributevalue"
 	"github.com/aws/aws-sdk-go-v2/feature/dynamodb/expression"
 	"github.com/aws/aws-sdk-go-v2/service/dynamodb"
 	"github.com/aws/aws-sdk-go-v2/service/dynamodb/types"
-	"github.com/tolubydesign/angular-story-backend/app/mutation"
 )
 
 // Code
@@ -84,8 +84,8 @@ func (basics TableBasics) ScanByExpression(startYear int, endYear int) ([]models
 }
 
 /*
-TODO: add description
-{...}
+Scan the entire Story table.
+Return all items in table.
 */
 func (basics TableBasics) FullTableScan() ([]models.DynamoStoryResponseStruct, error) {
 	var stories []models.DynamoStoryResponseStruct
@@ -108,9 +108,48 @@ func (basics TableBasics) FullTableScan() ([]models.DynamoStoryResponseStruct, e
 	}
 
 	if response.LastEvaluatedKey != nil {
-		log.Println("all items have not been scanned")
+		log.Println("All items have not been scanned")
 		return nil, errors.New("All items have not been scanned")
 	}
 
 	return stories, nil
+}
+
+func (basics TableBasics) GetStoryById(id string) (*models.DynamoStoryResponseStruct, error) {
+	var story []*models.DynamoStoryResponseStruct
+	var err error
+	var response *dynamodb.ScanOutput
+
+	nameBuilder := expression.Name("id").Equal(expression.Value(id))
+	// projectBuilder := expression.NamesList(
+	// 	expression.Name("year"), expression.Name("title"), expression.Name("info.rating"),
+	// )
+
+	expr, err := expression.NewBuilder().WithFilter(nameBuilder).Build()
+
+	if err != nil {
+		log.Printf("Couldn't build expressions for scan. Here's why: %v\n", err)
+		return nil, err
+	} else {
+		response, err = basics.DynamoDbClient.Scan(context.TODO(), &dynamodb.ScanInput{
+			TableName:                 aws.String(basics.TableName),
+			ExpressionAttributeNames:  expr.Names(),
+			ExpressionAttributeValues: expr.Values(),
+			FilterExpression:          expr.Filter(),
+			// ProjectionExpression:      expr.Projection(),
+		})
+
+		if err != nil {
+			log.Printf("\nCouldn't scan for story with id %v Error: %v\n", id, err)
+			return nil, err
+		} else {
+			err = attributevalue.UnmarshalListOfMaps(response.Items, &story)
+			if err != nil {
+				log.Printf("Couldn't unmarshal query response. Error: %v\n", err)
+				return nil, err
+			}
+		}
+	}
+
+	return story[0], nil
 }

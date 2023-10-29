@@ -123,11 +123,14 @@ func StoryTableExists(client *dynamodb.Client) (bool, error) {
 	}
 
 	// Check for story table in array of table names
-	for index, a := range tables {
-		fmt.Println("looping through tables ", index, a)
+	for _, a := range tables {
 		if a == "Story" {
 			exists = true
 		}
+	}
+
+	if exists {
+		fmt.Println("Story database table exists")
 	}
 
 	return exists, err

@@ -147,7 +147,7 @@ func DeleteDynamoDBTable(client *dynamodb.Client) error {
 
 // TODO: add multiple
 // Add a story the DynamoDB table.
-func (basics TableBasics) AddStory(story models.DynamodbStoryInitialisationStruct) error {
+func (basics TableBasics) AddStory(story models.DynamoStoryDatabaseStruct) error {
 	fmt.Println("Adding story to database.")
 
 	item, err := attributevalue.MarshalMap(story)
@@ -160,7 +160,7 @@ func (basics TableBasics) AddStory(story models.DynamodbStoryInitialisationStruc
 
 	if err != nil {
 		log.Printf("Couldn't add item to table. Reasoning: %v\n", err)
-
 	}
+
 	return err
 }
