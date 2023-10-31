@@ -2,15 +2,18 @@ package helpers
 
 import (
 	"context"
+	"encoding/json"
 	"errors"
 	"fmt"
 	"time"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/dynamodb"
+	"github.com/gofiber/fiber/v2"
 
 	"github.com/tolubydesign/angular-story-backend/app/models"
 	"github.com/tolubydesign/angular-story-backend/app/mutation"
+	"github.com/tolubydesign/angular-story-backend/app/utils"
 )
 
 /*
@@ -173,6 +176,7 @@ func PopulateStoryDatabase(table mutation.TableBasics) error {
 	return nil
 }
 
+// ...
 func waitForTable(ctx context.Context, db *dynamodb.Client, tn string) error {
 	w := dynamodb.NewTableExistsWaiter(db)
 	err := w.Wait(ctx,
@@ -189,4 +193,45 @@ func waitForTable(ctx context.Context, db *dynamodb.Client, tn string) error {
 	}
 
 	return err
+}
+
+// Return Story database struct, based on the fiber body context, provided in the http request.
+func GenerateStoryFromRequestContext(ctx *fiber.Ctx) (models.DynamoStoryDatabaseStruct, error) {
+	var err error
+	var body models.DynamoStoryDatabaseStruct
+	var story models.DynamoStoryDatabaseStruct
+
+	// Get data from fiber context
+	byteBody := ctx.Body()
+
+	// Convert Struct to JSON
+	json.Unmarshal(byteBody, &body)
+	// json, err := json.Marshal(body.Content)
+	if err != nil {
+		return story, err
+	}
+
+	// TODO: verify content structure of body json provided
+	story = models.DynamoStoryDatabaseStruct{
+		Title:       body.Title,
+		Description: body.Description,
+		Content:     body.Content,
+	}
+
+	return story, nil
+}
+
+// Return story id from the request header.
+// Errors will be noted if issues occur while trying to validate the provided id.
+func GetRequestHeaderID(ctx *fiber.Ctx) (string, error) {
+	var id string
+	headers := ctx.GetReqHeaders()
+	id = headers["Id"]
+
+	err := utils.ValidateLimitedStringVariable(id)
+	if err != nil {
+		return id, err
+	}
+
+	return id, err
 }

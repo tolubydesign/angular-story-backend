@@ -8,30 +8,7 @@ import (
 )
 
 func SetupMethods(app *fiber.App, db *sql.DB) {
-	app.Get("/stories", func(ctx *fiber.Ctx) error {
-		return GetAllStoriesRequest(ctx, db)
-	})
-
-	app.Get("/story", func(ctx *fiber.Ctx) error {
-		return GetSingleStoryRequest(ctx, db)
-	})
-
-	app.Post("/story", func(ctx *fiber.Ctx) error {
-		return InsertStoryRequest(ctx, db)
-	})
-
-	app.Delete("/story", func(ctx *fiber.Ctx) error {
-		return DeleteStoryRequest(ctx, db)
-	})
-
-	app.Put("/story", func(ctx *fiber.Ctx) error {
-		return UpdateStoryRequest(ctx, db)
-	})
-
-	app.Get("/health", func(c *fiber.Ctx) error {
-		return CheckHealthRequest(c, db)
-	})
-
+	SetupPostgreSQLMethods(app, db)
 	SetupDynamoDBMethods(app)
 }
 
@@ -59,18 +36,14 @@ func HandleCORS(app *fiber.App, environment string) {
 Setup dynamodb relate methods and requests.
 Connects to dynamodb database. If a connection is not made, process will error out.
 
-@returns - Error if connection to dynamodb is incorrect/insufficient OR method cannot be created.
+Returns error if connection to dynamodb is incorrect/insufficient OR method cannot be created.
 */
 func SetupDynamoDBMethods(app *fiber.App) {
-	// Get client
+	// Get Dynamodb Client
 	client, err := ConnectDynamoDB()
 	if err != nil {
 		panic(err)
 	}
-
-	// app.Post("/dynamo-table", func(ctx *fiber.Ctx) error {
-	// 	return CreateNewTable(ctx, client)
-	// })
 
 	app.Get("/dynamodb-list-tables", func(ctx *fiber.Ctx) error {
 		return GetAllDynamoDBTables(ctx, client)
@@ -80,15 +53,45 @@ func SetupDynamoDBMethods(app *fiber.App) {
 		return PopulateDynamoDatabase(ctx, client)
 	})
 
-	app.Post("/dynamo-add-story", func (ctx *fiber.Ctx) error {
+	app.Post("/dynamo-add-story", func(ctx *fiber.Ctx) error {
 		return AddStoryRequest(ctx, client)
 	})
 
-	app.Get("/dynamo-get-story", func (ctx *fiber.Ctx) error {
+	app.Get("/dynamo-get-story", func(ctx *fiber.Ctx) error {
 		return GetStoryByIdRequest(ctx, client)
 	})
 
 	app.Get("/dynamo-list-stories", func(ctx *fiber.Ctx) error {
 		return ListAllStories(ctx, client)
+	})
+
+	app.Put("/dynamo-update-story", func(ctx *fiber.Ctx) error {
+		return UpdateDynamodbStoryRequest(ctx, client)
+	})
+}
+
+func SetupPostgreSQLMethods(app *fiber.App, db *sql.DB) {
+	app.Get("/stories", func(ctx *fiber.Ctx) error {
+		return GetAllStoriesRequest(ctx, db)
+	})
+
+	app.Get("/story", func(ctx *fiber.Ctx) error {
+		return GetSingleStoryRequest(ctx, db)
+	})
+
+	app.Post("/story", func(ctx *fiber.Ctx) error {
+		return InsertStoryRequest(ctx, db)
+	})
+
+	app.Delete("/story", func(ctx *fiber.Ctx) error {
+		return DeleteStoryRequest(ctx, db)
+	})
+
+	app.Put("/story", func(ctx *fiber.Ctx) error {
+		return UpdateStoryRequest(ctx, db)
+	})
+
+	app.Get("/health", func(c *fiber.Ctx) error {
+		return CheckHealthRequest(c, db)
 	})
 }

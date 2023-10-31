@@ -150,7 +150,7 @@ func SetupStoryDatabase(client *dynamodb.Client) error {
 		return errors.New("Database is unreachable")
 	}
 
-	// Reading
+	// Reading:
 	// [Pointer receivers](https://go.dev/tour/methods/4)
 	tableName := "Story"
 	table := mutation.TableBasics{

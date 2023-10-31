@@ -1,7 +1,7 @@
 package models
 
 type JSONResponse struct {
-	Type    string      `json:"type"`
+	Code    int         `json:"code"`
 	Data    interface{} `json:"data"`
 	Message string      `json:"message"`
 }
