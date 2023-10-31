@@ -1,7 +1,6 @@
 package controller
 
 import (
-	"encoding/json"
 	"errors"
 	"fmt"
 
@@ -40,15 +39,14 @@ func CreateNewTable(ctx *fiber.Ctx, client *dynamodb.Client) error {
 	// TODO: get table name from request context. For now use hardcoded value
 	// TODO: get function parameters from request context
 	// TODO: use table.CreateDynamoDBTable to dynamically create new tables, when needed
-	response := models.JSONResponse{
-		Type:    "mid",
-		Data:    nil,
-		Message: "Function has not been created",
-	}
 
 	ctx.Response().StatusCode()
 	ctx.Response().Header.Add("Content-Type", "application/json")
-	return ctx.JSON(response)
+	return ctx.JSON(models.JSONResponse{
+		Code:    fiber.StatusForbidden,
+		Data:    nil,
+		Message: "Function has not been created",
+	})
 }
 
 func GetAllDynamoDBTables(ctx *fiber.Ctx, client *dynamodb.Client) error {
@@ -68,7 +66,7 @@ func GetAllDynamoDBTables(ctx *fiber.Ctx, client *dynamodb.Client) error {
 	}
 
 	response := models.JSONResponse{
-		Type:    "success",
+		Code:    fiber.StatusOK,
 		Data:    tables,
 		Message: "Tables found in DynamoDB.",
 	}
@@ -93,7 +91,7 @@ func PopulateDynamoDatabase(ctx *fiber.Ctx, client *dynamodb.Client) error {
 	}
 
 	response := models.JSONResponse{
-		Type:    "success",
+		Code:    fiber.StatusOK,
 		Data:    nil,
 		Message: "Request successful",
 	}
@@ -132,7 +130,7 @@ func ListAllStories(ctx *fiber.Ctx, client *dynamodb.Client) error {
 	}
 
 	response := models.JSONResponse{
-		Type:    "success",
+		Code:    fiber.StatusOK,
 		Data:    items,
 		Message: "Request successful",
 	}
@@ -164,28 +162,9 @@ func AddStoryRequest(ctx *fiber.Ctx, client *dynamodb.Client) error {
 		TableName:      tableName,
 	}
 
-	// Get data from fiber context
-	var body models.DynamoStoryDatabaseStruct
-	byteBody := ctx.Body()
-
-	// Convert Struct to JSON
-	json.Unmarshal(byteBody, &body)
-	// json, err := json.Marshal(body.Content)
+	story, err := helpers.GenerateStoryFromRequestContext(ctx)
 	if err != nil {
 		return err
-	}
-
-	// Convert Struct to JSON
-	json.Unmarshal(byteBody, &body)
-	if err != nil {
-		return err
-	}
-
-	story := models.DynamoStoryDatabaseStruct{
-		Id:          helpers.GenerateStringUUID(),
-		Title:       body.Title,
-		Description: body.Description,
-		Content:     body.Content,
 	}
 
 	err = table.AddStory(story)
@@ -196,7 +175,7 @@ func AddStoryRequest(ctx *fiber.Ctx, client *dynamodb.Client) error {
 	}
 
 	response := models.JSONResponse{
-		Type:    "success",
+		Code:    fiber.StatusOK,
 		Data:    nil,
 		Message: "Story added successfully",
 	}
@@ -207,7 +186,9 @@ func AddStoryRequest(ctx *fiber.Ctx, client *dynamodb.Client) error {
 }
 
 /*
-{...}
+Get Story bases on id provided in request.
+
+Will error if no id header is found
 */
 func GetStoryByIdRequest(ctx *fiber.Ctx, client *dynamodb.Client) error {
 	// TODO: log event
@@ -224,7 +205,15 @@ func GetStoryByIdRequest(ctx *fiber.Ctx, client *dynamodb.Client) error {
 
 	fmt.Println("Story id", storyId)
 	if (len(storyId) < 6) || (storyId == "") {
+		// TODO: more descriptive response
+		ctx.Response().StatusCode()
+		ctx.Response().Header.Add("Content-Type", "application/json")
 		return fiber.NewError(fiber.StatusInternalServerError, "Invalid ID provided")
+		// return ctx.JSON(models.JSONResponse{
+		// 	Type:    "success",
+		// 	Data:    story,
+		// 	Message: "Request successfully",
+		// })
 	}
 
 	// Setup table
@@ -244,8 +233,53 @@ func GetStoryByIdRequest(ctx *fiber.Ctx, client *dynamodb.Client) error {
 	ctx.Response().StatusCode()
 	ctx.Response().Header.Add("Content-Type", "application/json")
 	return ctx.JSON(models.JSONResponse{
-		Type:    "success",
+		Code:    fiber.StatusOK,
 		Data:    story,
 		Message: "Request successfully",
+	})
+}
+
+/*
+Update story based on the story id and body context provided.
+
+If the user does not provide both id and context, with "title", "description" and "content" (in the request body),
+the request will return an error.
+*/
+func UpdateDynamodbStoryRequest(ctx *fiber.Ctx, client *dynamodb.Client) error {
+	fmt.Println("Update dynamodb story request.")
+	if client == nil {
+		return errors.New(helpers.DynamodbResponseMessages["nilClient"])
+	}
+
+	id, err := helpers.GetRequestHeaderID(ctx)
+	if err != nil {
+		return fiber.NewError(fiber.StatusBadRequest, err.Error())
+	}
+
+	// Get body context
+	// TODO: verify structure of body json provided
+	story, err := helpers.GenerateStoryFromRequestContext(ctx)
+	if err != nil {
+		return fiber.NewError(fiber.StatusInternalServerError, err.Error())
+	}
+
+	// tableName := "Story"
+	// table := mutation.TableBasics{
+	// 	DynamoDbClient: client,
+	// 	TableName:      tableName,
+	// }
+
+	fmt.Println("id: ", id)
+	fmt.Printf("\nstory: %v\n", story)
+
+	// Update story, in database, from content provided.
+	// table.UpdateDynamoDBTable(story)
+
+	ctx.Response().StatusCode()
+	ctx.Response().Header.Add("Content-Type", "application/json")
+	return ctx.JSON(models.JSONResponse{
+		Code:    fiber.StatusOK,
+		Data:    nil,
+		Message: "Request successful",
 	})
 }

@@ -160,7 +160,31 @@ func (basics TableBasics) AddStory(story models.DynamoStoryDatabaseStruct) error
 
 	if err != nil {
 		log.Printf("Couldn't add item to table. Reasoning: %v\n", err)
+		return err
 	}
 
 	return err
+}
+
+// Update existing story in the dynamodb database with new content provided.
+func (basics TableBasics) UpdateDynamoDBTable(story models.DynamoStoryDatabaseStruct) (*dynamodb.PutItemOutput, error) {
+	fmt.Println("Updating existing story, using story content provided.")
+	var itemOutput *dynamodb.PutItemOutput
+	var err error
+
+	item, err := attributevalue.MarshalMap(story)
+	if err != nil {
+		return nil, err
+	}
+
+	itemOutput, err = basics.DynamoDbClient.PutItem(context.TODO(), &dynamodb.PutItemInput{
+		TableName: aws.String(basics.TableName), Item: item,
+	})
+
+	if err != nil {
+		log.Println("Couldn't update item to table. Reasoning:", err.Error())
+		return nil, err
+	}
+
+	return itemOutput, err
 }

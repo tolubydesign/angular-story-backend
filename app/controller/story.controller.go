@@ -55,7 +55,7 @@ func GetAllStoriesRequest(ctx *fiber.Ctx, db *sql.DB) error {
 	}
 
 	response := models.JSONResponse{
-		Type:    "success",
+		Code:    fiber.StatusOK,
 		Data:    storyArray,
 		Message: "Fetch all stories.",
 	}
@@ -117,7 +117,7 @@ func GetSingleStoryRequest(ctx *fiber.Ctx, db *sql.DB) error {
 	}
 
 	response := models.JSONResponse{
-		Type:    "success",
+		Code:    fiber.StatusOK,
 		Data:    returningResponse,
 		Message: "Fetch single story.",
 	}
@@ -182,7 +182,7 @@ func InsertStoryRequest(c *fiber.Ctx, db *sql.DB) error {
 	}
 
 	response := models.JSONResponse{
-		Type:    "success",
+		Code:    fiber.StatusOK,
 		Data:    nil,
 		Message: "Database has been updated.",
 	}
@@ -220,7 +220,7 @@ func DeleteStoryRequest(c *fiber.Ctx, db *sql.DB) error {
 
 	message := fmt.Sprintf("Deleted story with id: %s", id)
 	response := models.JSONResponse{
-		Type:    "success",
+		Code:    fiber.StatusOK,
 		Data:    nil,
 		Message: message,
 	}
@@ -258,7 +258,7 @@ func UpdateStoryRequest(c *fiber.Ctx, db *sql.DB) error {
 
 	message := fmt.Sprintf("Updated story with id: %s", id)
 	response := models.JSONResponse{
-		Type:    "success",
+		Code:    fiber.StatusOK,
 		Message: message,
 		Data:    nil,
 	}
