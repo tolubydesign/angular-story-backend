@@ -169,6 +169,7 @@ func SetupStoryDatabase(client *dynamodb.Client) error {
 			AttributeName: aws.String("title"),
 			AttributeType: types.ScalarAttributeTypeS,
 		}},
+
 		// Add key schema
 		KeySchemaElement: []types.KeySchemaElement{{
 			AttributeName: aws.String("id"),

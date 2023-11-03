@@ -1,4 +1,4 @@
-package controller
+package dynamodbrequest
 
 import (
 	"errors"
@@ -13,9 +13,7 @@ import (
 	query "github.com/tolubydesign/angular-story-backend/app/query"
 )
 
-/*
-Get client connection to dynamodb.
-*/
+// Get client connection to dynamodb.
 func ConnectDynamoDB() (*dynamodb.Client, error) {
 	// Connect to PostgreSQL database
 	client, err := database.CreateDynamoClient()
@@ -27,9 +25,9 @@ func ConnectDynamoDB() (*dynamodb.Client, error) {
 }
 
 /*
-Creating a new table
-TODO: write description for function
-{...}
+Function incomplete.
+Creating a new table.
+Database name and structure are provided by user request and request body.
 */
 func CreateNewTable(ctx *fiber.Ctx, client *dynamodb.Client) error {
 	if client == nil {
@@ -102,14 +100,9 @@ func PopulateDynamoDatabase(ctx *fiber.Ctx, client *dynamodb.Client) error {
 }
 
 /*
-TODO: add description
+List all stories within the database.
 
-param - ctx Fiber Context
-
-param - client Dynamo DB client
-
-@see - https://towardsdatascience.com/dynamodb-go-sdk-how-to-use-the-scan-and-batch-operations-efficiently-5b41988b4988
-{...}
+- https://towardsdatascience.com/dynamodb-go-sdk-how-to-use-the-scan-and-batch-operations-efficiently-5b41988b4988
 */
 func ListAllStories(ctx *fiber.Ctx, client *dynamodb.Client) error {
 	if client == nil {
@@ -141,11 +134,7 @@ func ListAllStories(ctx *fiber.Ctx, client *dynamodb.Client) error {
 }
 
 /*
-Add new story to dynamodb
-
-ctx - Fiber Context
-
-client - Dynamo DB client
+Add new story to dynamodb. Content for story is required
 */
 func AddStoryRequest(ctx *fiber.Ctx, client *dynamodb.Client) error {
 	fmt.Println("Adding Story request.")
@@ -263,23 +252,32 @@ func UpdateDynamodbStoryRequest(ctx *fiber.Ctx, client *dynamodb.Client) error {
 		return fiber.NewError(fiber.StatusInternalServerError, err.Error())
 	}
 
-	// tableName := "Story"
-	// table := mutation.TableBasics{
-	// 	DynamoDbClient: client,
-	// 	TableName:      tableName,
-	// }
+	table := mutation.TableBasics{
+		DynamoDbClient: client,
+		TableName:      "Story",
+	}
 
 	fmt.Println("id: ", id)
-	fmt.Printf("\nstory: %v\n", story)
+	fmt.Println("story:", story)
+
+	story = models.DynamoStoryDatabaseStruct{
+		Id:          id,
+		Title:       story.Title,
+		Description: story.Description,
+		Content:     story.Content,
+	}
 
 	// Update story, in database, from content provided.
-	// table.UpdateDynamoDBTable(story)
+	content, err := table.UpdateDynamoDBTable(story)
+	if err != nil {
+		return fiber.NewError(fiber.StatusBadRequest, err.Error())
+	}
 
 	ctx.Response().StatusCode()
 	ctx.Response().Header.Add("Content-Type", "application/json")
 	return ctx.JSON(models.JSONResponse{
 		Code:    fiber.StatusOK,
-		Data:    nil,
+		Data:     models.DynamoStoryResponseStruct(content),
 		Message: "Request successful",
 	})
 }

@@ -1,7 +1,9 @@
 {
   "cSpell.words": [
     "attributevalue",
+    "basicrequest",
     "ctxt",
+    "dynamodbrequest",
     "fasthttp",
     "fiber",
     "godotenv",
@@ -9,6 +11,7 @@
     "joho",
     "ossp",
     "pgcrypto",
+    "postgresrequest",
     "sslmode"
   ]
 }
