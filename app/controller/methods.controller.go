@@ -103,4 +103,9 @@ func SetupDynamoDBMethods(app *fiber.App) {
 	app.Delete("/dynamo-remove-story", func(ctx *fiber.Ctx) error {
 		return dynamodb.DeleteDynamodbStoryRequest(ctx, client)
 	})
+
+	// Users
+	app.Get("/dynamodb-list-users", func(ctx *fiber.Ctx) error {
+		return dynamodb.ListAllUsersRequest(ctx, client)
+	})
 }

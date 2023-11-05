@@ -1,6 +1,7 @@
 package dynamodbrequest
 
 import (
+	"encoding/json"
 	"errors"
 	"fmt"
 	"log"
@@ -342,5 +343,44 @@ func DeleteDynamodbStoryRequest(ctx *fiber.Ctx, client *dynamodb.Client) error {
 		Code:    fiber.StatusOK,
 		Message: fmt.Sprintf("Request to delete story successful id:%s", id),
 	})
+}
 
+/*
+List all users in dynamodb database
+*/
+func ListAllUsersRequest(ctx *fiber.Ctx, client *dynamodb.Client) error {
+	var userJson []models.User
+	configuration, err := config.GetConfiguration()
+	if client == nil {
+		return errors.New(helpers.DynamodbResponseMessages["nilClient"])
+	}
+	if err != nil {
+		return fiber.NewError(fiber.StatusInternalServerError, err.Error())
+	}
+
+	table := query.TableBasics{
+		DynamoDbClient: client,
+		TableName:      configuration.Configuration.Dynamodb.UserTableName,
+	}
+
+	items, err := table.FullUserTableScan()
+	if err != nil {
+		// Return error to user
+		return fiber.NewError(fiber.StatusInternalServerError, error.Error(err))
+	}
+
+	// Convert items ([]models.DatabaseUserStruct) into json
+	temp, _ := json.Marshal(items)
+	err = json.Unmarshal(temp, &userJson)
+	if err != nil {
+		return fiber.NewError(fiber.StatusInternalServerError, err.Error())
+	}
+
+	ctx.Response().StatusCode()
+	ctx.Response().Header.Add("Content-Type", "application/json")
+	return ctx.JSON(models.JSONResponse{
+		Code:    fiber.StatusOK,
+		Data:    userJson,
+		Message: "Request successful",
+	})
 }

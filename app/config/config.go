@@ -58,7 +58,7 @@ var configurationSingleton *Config
 /*
 Build and return the environmental configuration.
 
-@returns Configuration or error, if issues occur
+Returns Configuration or error, if issues occur.
 */
 func BuildConfiguration() (*Config, error) {
 	pgArgEnvironment := os.Args[1]
@@ -89,6 +89,7 @@ func BuildConfiguration() (*Config, error) {
 			UserTableName:  envs["DYNAMODB_USER_TABLE_NAME"],
 		}
 
+		// TODO: Get configuration from .env file
 		redisConfiguration := RedisConfiguration{
 			User:     "",
 			Host:     "localhost",
@@ -97,6 +98,7 @@ func BuildConfiguration() (*Config, error) {
 			Database: 0,
 		}
 
+		// TODO: Get configuration from .env file
 		postgreSQLConfig := PostgreSQLConfiguration{
 			User:         "postgres",
 			Host:         "localhost",
