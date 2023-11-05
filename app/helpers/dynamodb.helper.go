@@ -31,6 +31,7 @@ func PopulateStoryDatabase(table mutation.TableBasics) error {
 	// Upload stories
 	err = table.AddStory(models.DynamoStoryDatabaseStruct{
 		Id:          GenerateStringUUID(),
+		Creator:     "default",
 		Title:       "descriptive title",
 		Description: "descriptive description text",
 		Content: &models.StoryContent{
@@ -98,6 +99,7 @@ func PopulateStoryDatabase(table mutation.TableBasics) error {
 
 	err = table.AddStory(models.DynamoStoryDatabaseStruct{
 		Id:          GenerateStringUUID(),
+		Creator:     "default",
 		Title:       "Porttitor quis ultrices tortor",
 		Description: "Nullam non tempor nisi, ut porta ex. Aenean non mi et nibh feugiat congue id et lacus.",
 		Content:     nil})
@@ -108,6 +110,7 @@ func PopulateStoryDatabase(table mutation.TableBasics) error {
 
 	err = table.AddStory(models.DynamoStoryDatabaseStruct{
 		Id:          GenerateStringUUID(),
+		Creator:     "default",
 		Title:       "website request title",
 		Description: "website request description",
 		Content: &models.StoryContent{
@@ -234,4 +237,14 @@ func GetRequestHeaderID(ctx *fiber.Ctx) (string, error) {
 	}
 
 	return id, err
+}
+
+// Generic method of getting a Fiber Context request header
+func GetRequestHeader(ctx *fiber.Ctx, name string) string {
+	var header string
+	headers := ctx.GetReqHeaders()
+	fmt.Println("headers: ", headers)
+	header = headers[name]
+
+	return header
 }

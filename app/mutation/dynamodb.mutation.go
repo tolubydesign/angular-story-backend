@@ -9,6 +9,7 @@ import (
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/feature/dynamodb/attributevalue"
+	"github.com/aws/aws-sdk-go-v2/feature/dynamodb/expression"
 	"github.com/aws/aws-sdk-go-v2/service/dynamodb"
 	"github.com/aws/aws-sdk-go-v2/service/dynamodb/types"
 	models "github.com/tolubydesign/angular-story-backend/app/models"
@@ -150,161 +151,97 @@ func (basics TableBasics) UpdateDynamoDBTable(story models.DynamoStoryDatabaseSt
 		Content:     story.Content,
 	}
 
-	// Get story key
-	storyTitle, err := attributevalue.Marshal(story.Title)
-	if err != nil {
-		return attributeMap, err
-	}
-
-	storyDescription, err := attributevalue.Marshal(story.Description)
-	if err != nil {
-		return attributeMap, err
-	}
-
-	storyContent, err := attributevalue.Marshal(story.Content)
-	if err != nil {
-		return attributeMap, err
-	}
-
-	// r := models.DynamoStoryDatabaseStruct{
-	// 	Id:          story.Id,
-	// 	Title:     story.Title,
-	// 	Description: story.Description,
-	// }
-
-	// key, err := attributevalue.MarshalMap(r)
-
-	// Key: map[string]types.AttributeValue{
-	// 	"title":       storyTitle,
-	// 	"description": storyDescription,
-	// },
-	if err != nil {
-		log.Fatalf("Got error marshalling item: %s", err)
-	}
-
-	// storyKey, err := GetKey(story)
+	// storyTitle, err := attributevalue.Marshal(story.Title)
 	// if err != nil {
 	// 	return attributeMap, err
 	// }
 
-	fmt.Println("story title:-- ", fmt.Sprintf("%v", storyTitle))
-	fmt.Println("story description:-- ", fmt.Sprintf("%v", storyDescription))
-	fmt.Println("story content:-- ", fmt.Sprintf("%v", storyContent))
+	// storyDescription, err := attributevalue.Marshal(story.Description)
+	// if err != nil {
+	// 	return attributeMap, err
+	// }
 
-	// 	out, err := basics.DynamoDbClient.UpdateItem(context.TODO(), &dynamodb.UpdateItemInput{
-	// 		TableName: aws.String("my-table"),
-	// 		Key: map[string]types.AttributeValue{
-	// 				"id": &types.AttributeValueMemberS{Value: "123"},
-	// 		},
-	// 		UpdateExpression: aws.String("set title = :title, description = :description"),
-	// 		ExpressionAttributeValues: map[string]types.AttributeValue{
-	// 				":title": &types.AttributeValueMemberS{Value: (*pointer).Id},
-	// 				":description": &types.AttributeValueMemberS{Value: (*pointer).Id},
-	// 		},
-	// })
+	// storyContent, err := attributevalue.Marshal(story.Content)
+	// if err != nil {
+	// 	return attributeMap, err
+	// }
 
-	log.Println(fmt.Sprintf("ID --- %v", (*pointer).Id))
-	log.Println(fmt.Sprintf("DESCRIPTION --- %v", (*pointer).Description))
-	log.Println(fmt.Sprintf("TITLE --- %v", (*pointer).Title))
-	log.Println(fmt.Sprintf("TITLE --- %v", (*pointer).Content))
+	// if err != nil {
+	// 	log.Fatalf("Got error marshalling item: %s", err)
+	// }
 
-	response, err = basics.DynamoDbClient.UpdateItem(context.TODO(), &dynamodb.UpdateItemInput{
+	// fmt.Println("story title:-- ", fmt.Sprintf("%v", storyTitle))
+	// fmt.Println("story description:-- ", fmt.Sprintf("%v", storyDescription))
+	// fmt.Println("story content:-- ", fmt.Sprintf("%v", storyContent))
+
+	// log.Println(fmt.Sprintf("ID --- %v", (*pointer).Id))
+	// log.Println(fmt.Sprintf("DESCRIPTION --- %v", (*pointer).Description))
+	// log.Println(fmt.Sprintf("TITLE --- %v", (*pointer).Title))
+	// log.Println(fmt.Sprintf("TITLE --- %v", (*pointer).Content))
+
+	update := expression.Set(expression.Name("description"), expression.Value((*pointer).Description))
+	// update.Set(expression.Name("title"), expression.Value((*pointer).Title))
+	update.Set(expression.Name("content"), expression.Value((*pointer).Content))
+	expr, err := expression.NewBuilder().WithUpdate(update).Build()
+
+	if err != nil {
+		return attributeMap, err
+	} else {
+		response, err = basics.DynamoDbClient.UpdateItem(context.TODO(), &dynamodb.UpdateItemInput{
+			TableName: aws.String(basics.TableName),
+			Key: map[string]types.AttributeValue{
+				"id":    &types.AttributeValueMemberS{Value: (*pointer).Id},
+				"title": &types.AttributeValueMemberS{Value: (*pointer).Title},
+			},
+
+			ExpressionAttributeNames:  expr.Names(),
+			ExpressionAttributeValues: expr.Values(),
+			UpdateExpression:          expr.Update(),
+			ReturnValues:              types.ReturnValueUpdatedNew,
+
+			// Alternative method:
+			// UpdateExpression:         aws.String("set description = :description, content = :content"),
+			// ExpressionAttributeValues: map[string]types.AttributeValue{
+			// 	// ":title":       &types.AttributeValueMemberS{Value: (*pointer).Title},
+			// 	":description": &types.AttributeValueMemberS{Value: (*pointer).Description},
+			// 	":content":     storyContent,
+			// },
+		})
+
+		consoleResponse := fmt.Sprintf("%v", response)
+		fmt.Println("Update story return response: ", consoleResponse)
+
+		if err != nil {
+			log.Printf("Couldn't update story %v. Here's why: %v\n", story.Title, err)
+			return attributeMap, err
+		} else {
+
+			err = attributevalue.UnmarshalMap(response.Attributes, &attributeMap)
+			if err != nil {
+				log.Printf("Couldn't unmarshall update response. Here's why: %v\n", err)
+				return attributeMap, err
+			}
+
+			return attributeMap, err
+		}
+	}
+}
+
+// DeleteMovie removes a movie from the DynamoDB table.
+func (basics TableBasics) DeleteStory(story models.DynamoStoryDatabaseStruct) error {
+	_, err := basics.DynamoDbClient.DeleteItem(context.TODO(), &dynamodb.DeleteItemInput{
 		TableName: aws.String(basics.TableName),
 		Key: map[string]types.AttributeValue{
-			"id":    &types.AttributeValueMemberS{Value: (*pointer).Id},
-			"title": &types.AttributeValueMemberS{Value: (*pointer).Title},
+			"id":    &types.AttributeValueMemberS{Value: story.Id},
+			"title": &types.AttributeValueMemberS{Value: story.Title},
 		},
-		UpdateExpression: aws.String("set description = :description, content = :content"),
-		ExpressionAttributeValues: map[string]types.AttributeValue{
-			// ":title":       &types.AttributeValueMemberS{Value: (*pointer).Title},
-			":description": &types.AttributeValueMemberS{Value: (*pointer).Description},
-			":content":     storyContent,
-		},
-		ReturnValues: types.ReturnValueUpdatedNew,
 	})
 
 	if err != nil {
-		log.Printf("Couldn't update story %v. Here's why: %v\n", story.Title, err)
-		return attributeMap, err
+		log.Printf("Couldn't delete %v from the table. Here's why: %v\n", story.Title, err)
 	}
 
-	consoleResponse := fmt.Sprintf("%v", response)
-	fmt.Println("Update story return response: ", consoleResponse)
-
-	err = attributevalue.UnmarshalMap(response.Attributes, &attributeMap)
-	if err != nil {
-		log.Printf("Couldn't unmarshall update response. Here's why: %v\n", err)
-	}
-
-	return attributeMap, err
-
-	// update := expression.Set(expression.Name("id"), expression.Value((*pointer).Id))
-	// update.Set(expression.Name("title"), expression.Value((*pointer).Title))
-	// update.Set(expression.Name("description"), expression.Value((*pointer).Description))
-	// update.Set(expression.Name("content"), expression.Value((*pointer).Content))
-	// expr, err := expression.NewBuilder().WithUpdate(update).Build()
-
-	// if err != nil {
-	// 	log.Printf("Couldn't build expression for update. Here's why: %v\n", err)
-	// } else {
-	// 	// response, err = basics.DynamoDbClient.UpdateItem(context.TODO(), &dynamodb.UpdateItemInput{
-	// 	// 	TableName: aws.String(basics.TableName),
-	// 	// 	Key: map[string]types.AttributeValue{
-	// 	// 		"title":       &types.AttributeValueMemberS{Value: (*pointer).Title},
-	// 	// 		"description": &types.AttributeValueMemberS{Value: (*pointer).Description},
-	// 	// 	},
-	// 	// 	ExpressionAttributeNames:  expr.Names(),
-	// 	// 	ExpressionAttributeValues: expr.Values(),
-	// 	// 	UpdateExpression:          expr.Update(),
-
-	// 	// 	// // This block can get really out of hand on big updates
-	// 	// 	// // UpdateExpression:          expr.Update(),
-	// 	// 	// UpdateExpression: aws.String("set title = :title, description = :description, content = :content"),
-	// 	// 	// // ExpressionAttributeValues: expr.Values(),
-	// 	// 	// ExpressionAttributeValues: map[string]types.AttributeValue{
-	// 	// 	// 	":title":       &types.AttributeValueMemberS{Value: story.Title},
-	// 	// 	// 	":description": &types.AttributeValueMemberS{Value: story.Description},
-	// 	// 	// 	// ":content": map[string]AttributeValue{"content": story.Content},
-	// 	// 	// },
-	// 	// 	// ExpressionAttributeNames: expr.Names(),
-
-	// 	// 	ReturnValues: types.ReturnValueUpdatedNew,
-	// 	// })
-
-	// 	// response, err = basics.DynamoDbClient.UpdateItem(context.TODO(), &dynamodb.UpdateItemInput{
-	// 	// 	TableName: aws.String(basics.TableName),
-	// 	// 	Key: map[string]types.AttributeValue{
-	// 	// 		"title":       &types.AttributeValueMemberS{Value: story.Title},
-	// 	// 		"description": &types.AttributeValueMemberS{Value: story.Description},
-	// 	// 	},
-
-	// 	// 	// This block can get really out of hand on big updates
-	// 	// 	UpdateExpression: aws.String("set title = :title, description = :description"),
-	// 	// 	ExpressionAttributeValues: map[string]types.AttributeValue{
-	// 	// 		":title":       &types.AttributeValueMemberS{Value: story.Title},
-	// 	// 		":description": &types.AttributeValueMemberS{Value: story.Description},
-	// 	// 	},
-	// 	// 	ReturnValues: types.ReturnValueUpdatedNew,
-	// 	// })
-
-	// 	log.Println(fmt.Sprintf("update item response %v", response))
-	// 	log.Println(fmt.Sprintf("update item response %v", err))
-	// 	if err != nil {
-	// 		log.Printf("Couldn't update story %v. Here's why: %v\n", story.Title, err)
-	// 		return attributeMap, err
-	// 	} else {
-	// 		err = attributevalue.UnmarshalMap(response.Attributes, &attributeMap)
-	// 		if err != nil {
-	// 			log.Printf("Couldn't unmarshall update response. Here's why: %v\n", err)
-	// 		}
-
-	// 		return attributeMap, err
-	// 	}
-	// }
-
-	// consoleResponse := fmt.Sprintf("%v", response)
-	// fmt.Println("Update story: ", consoleResponse)
-	return attributeMap, err
+	return err
 }
 
 // GetKey returns the composite primary key of the movie in a format that can be
