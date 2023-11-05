@@ -7,6 +7,7 @@ import (
 
 	"github.com/aws/aws-sdk-go-v2/service/dynamodb"
 	"github.com/gofiber/fiber/v2"
+	"github.com/tolubydesign/angular-story-backend/app/config"
 	database "github.com/tolubydesign/angular-story-backend/app/database"
 	helpers "github.com/tolubydesign/angular-story-backend/app/helpers"
 	models "github.com/tolubydesign/angular-story-backend/app/models"
@@ -79,15 +80,18 @@ Generate false data to populate dynamodb database
 */
 func PopulateDynamoDatabase(ctx *fiber.Ctx, client *dynamodb.Client) error {
 	fmt.Println("Adding default data to the dynamo database")
-	
-	
-	tableName := "Story"
-	table := mutation.TableBasics{
-		DynamoDbClient: client,
-		TableName:      tableName,
+	configuration, err := config.GetConfiguration()
+	if err != nil {
+		// Return error to user
+		return fiber.NewError(fiber.StatusInternalServerError, error.Error(err))
 	}
 
-	err := helpers.PopulateStoryDatabase(table)
+	table := mutation.TableBasics{
+		DynamoDbClient: client,
+		TableName:      configuration.Configuration.Dynamodb.StoryTableName,
+	}
+
+	err = helpers.PopulateStoryDatabase(table)
 	if err != nil {
 		// Return error to user
 		return fiber.NewError(fiber.StatusInternalServerError, error.Error(err))
@@ -141,6 +145,8 @@ Add new story to dynamodb. Content for story is required
 func AddStoryRequest(ctx *fiber.Ctx, client *dynamodb.Client) error {
 	log.Println("Adding Story request.")
 	var err error
+	configuration, err := config.GetConfiguration()
+
 	if client == nil {
 		return fiber.NewError(fiber.StatusInternalServerError, helpers.DynamodbResponseMessages["nilClient"])
 	}
@@ -149,7 +155,7 @@ func AddStoryRequest(ctx *fiber.Ctx, client *dynamodb.Client) error {
 	// TODO: get table name from env
 	table := mutation.TableBasics{
 		DynamoDbClient: client,
-		TableName:      "Story",
+		TableName:      configuration.Configuration.Dynamodb.StoryTableName,
 	}
 
 	story, err := helpers.GenerateStoryFromRequestContext(ctx)
@@ -237,6 +243,8 @@ the request will return an error.
 */
 func UpdateDynamodbStoryRequest(ctx *fiber.Ctx, client *dynamodb.Client) error {
 	fmt.Println("Update dynamodb story request.")
+	var err error
+	configuration, err := config.GetConfiguration()
 	if client == nil {
 		return errors.New(helpers.DynamodbResponseMessages["nilClient"])
 	}
@@ -255,7 +263,7 @@ func UpdateDynamodbStoryRequest(ctx *fiber.Ctx, client *dynamodb.Client) error {
 
 	table := mutation.TableBasics{
 		DynamoDbClient: client,
-		TableName:      "Story",
+		TableName:      configuration.Configuration.Dynamodb.StoryTableName,
 	}
 
 	fmt.Println("id: ", id)
@@ -294,8 +302,9 @@ func UpdateDynamodbStoryRequest(ctx *fiber.Ctx, client *dynamodb.Client) error {
 /*
  */
 func DeleteDynamodbStoryRequest(ctx *fiber.Ctx, client *dynamodb.Client) error {
-	var err error
 	log.Println("Delete dynamodb story request.")
+	var err error
+	configuration, err := config.GetConfiguration()
 	if client == nil {
 		return errors.New(helpers.DynamodbResponseMessages["nilClient"])
 	}
@@ -313,7 +322,7 @@ func DeleteDynamodbStoryRequest(ctx *fiber.Ctx, client *dynamodb.Client) error {
 
 	table := mutation.TableBasics{
 		DynamoDbClient: client,
-		TableName:      "Story",
+		TableName:      configuration.Configuration.Dynamodb.StoryTableName,
 	}
 
 	story := models.DynamoStoryDatabaseStruct{

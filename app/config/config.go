@@ -14,6 +14,12 @@ type AWSConfiguration struct {
 	SessionToken    string `json:"sessionToken"`
 }
 
+type DynamodbConfiguration struct {
+	Aws            AWSConfiguration `json:"aws"`
+	StoryTableName string           `json:"storyTableName"`
+	UserTableName  string           `json:"userTableName"`
+}
+
 type RedisConfiguration struct {
 	User     string `json:"user"`
 	Host     string `json:"host"`
@@ -28,12 +34,6 @@ type PostgreSQLConfiguration struct {
 	Port         int    `json:"port"`
 	Password     string `json:"password"`
 	DatabaseName string `json:"databaseName"`
-}
-
-type DynamodbConfiguration struct {
-	Aws            AWSConfiguration `json:"aws"`
-	StoryTableName string           `json:"storyTableName"`
-	UserTableName  string           `json:"userTableName"`
 }
 
 type DatabaseConfig struct {
@@ -66,8 +66,7 @@ func BuildConfiguration() (*Config, error) {
 
 	// Deny processing if environment argument isn't what we want
 	if (pgArgEnvironment == "development") || (pgArgEnvironment == "production") {
-		// Note:
-		// Alternative method of getting a .env file
+		// Note: Alternative method of getting a .env file
 		// gottenEnv := os.Getenv("PORT")
 		// environment := os.Getenv("ENV")
 		var envs map[string]string
@@ -80,7 +79,16 @@ func BuildConfiguration() (*Config, error) {
 		environment := envs["ENV"]
 
 		// TODO: Get configuration settings from .env file
-		// In a production environment you wouldn't hard code these values. They should be dynamically imported
+		dynamodbConfiguration := DynamodbConfiguration{
+			Aws: AWSConfiguration{
+				AccessKeyID:     envs["AWS_ACCESS_KEY_ID"],
+				SecretAccessKey: envs["AWS_SECRET_ACCESS_KEY"],
+				SessionToken:    "dummy",
+			},
+			StoryTableName: envs["DYNAMODB_STORY_TABLE_NAME"],
+			UserTableName:  envs["DYNAMODB_USER_TABLE_NAME"],
+		}
+
 		redisConfiguration := RedisConfiguration{
 			User:     "",
 			Host:     "localhost",
@@ -108,6 +116,7 @@ func BuildConfiguration() (*Config, error) {
 				Charset:     "utf8",
 				Redis:       redisConfiguration,
 				Postgres:    postgreSQLConfig,
+				Dynamodb:    dynamodbConfiguration,
 			},
 		}
 
