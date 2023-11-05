@@ -36,7 +36,6 @@ func HandleCORS(app *fiber.App, environment string) {
 	app.Use(cors.New(configuration))
 }
 
-
 // Setup REST API endpoints that use the PostgreSQL Database
 func SetupPostgreSQLMethods(app *fiber.App, db *sql.DB) {
 	app.Get("/stories", func(ctx *fiber.Ctx) error {
@@ -63,7 +62,6 @@ func SetupPostgreSQLMethods(app *fiber.App, db *sql.DB) {
 		return postgres.CheckHealthRequest(c, db)
 	})
 }
-
 
 /*
 Setup REST API endpoints that use the Dynamodb Database.
@@ -100,5 +98,9 @@ func SetupDynamoDBMethods(app *fiber.App) {
 
 	app.Put("/dynamo-update-story", func(ctx *fiber.Ctx) error {
 		return dynamodb.UpdateDynamodbStoryRequest(ctx, client)
+	})
+
+	app.Delete("/dynamo-remove-story", func(ctx *fiber.Ctx) error {
+		return dynamodb.DeleteDynamodbStoryRequest(ctx, client)
 	})
 }

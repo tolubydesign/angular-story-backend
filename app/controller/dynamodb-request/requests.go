@@ -3,6 +3,7 @@ package dynamodbrequest
 import (
 	"errors"
 	"fmt"
+	"log"
 
 	"github.com/aws/aws-sdk-go-v2/service/dynamodb"
 	"github.com/gofiber/fiber/v2"
@@ -57,7 +58,6 @@ func GetAllDynamoDBTables(ctx *fiber.Ctx, client *dynamodb.Client) error {
 	}
 
 	tables, err := table.ListDynamodbTables()
-
 	if err != nil {
 		// Return error to user
 		return fiber.NewError(fiber.StatusInternalServerError, error.Error(err))
@@ -74,8 +74,13 @@ func GetAllDynamoDBTables(ctx *fiber.Ctx, client *dynamodb.Client) error {
 	return ctx.JSON(response)
 }
 
+/*
+Generate false data to populate dynamodb database
+*/
 func PopulateDynamoDatabase(ctx *fiber.Ctx, client *dynamodb.Client) error {
 	fmt.Println("Adding default data to the dynamo database")
+	
+	
 	tableName := "Story"
 	table := mutation.TableBasics{
 		DynamoDbClient: client,
@@ -88,15 +93,12 @@ func PopulateDynamoDatabase(ctx *fiber.Ctx, client *dynamodb.Client) error {
 		return fiber.NewError(fiber.StatusInternalServerError, error.Error(err))
 	}
 
-	response := models.JSONResponse{
-		Code:    fiber.StatusOK,
-		Data:    nil,
-		Message: "Request successful",
-	}
-
 	ctx.Response().StatusCode()
 	ctx.Response().Header.Add("Content-Type", "application/json")
-	return ctx.JSON(response)
+	return ctx.JSON(models.JSONResponse{
+		Code:    fiber.StatusOK,
+		Message: "Request successful",
+	})
 }
 
 /*
@@ -137,18 +139,17 @@ func ListAllStories(ctx *fiber.Ctx, client *dynamodb.Client) error {
 Add new story to dynamodb. Content for story is required
 */
 func AddStoryRequest(ctx *fiber.Ctx, client *dynamodb.Client) error {
-	fmt.Println("Adding Story request.")
-
+	log.Println("Adding Story request.")
 	var err error
 	if client == nil {
 		return fiber.NewError(fiber.StatusInternalServerError, helpers.DynamodbResponseMessages["nilClient"])
 	}
 
 	// Setup table
-	tableName := "Story"
+	// TODO: get table name from env
 	table := mutation.TableBasics{
 		DynamoDbClient: client,
-		TableName:      tableName,
+		TableName:      "Story",
 	}
 
 	story, err := helpers.GenerateStoryFromRequestContext(ctx)
@@ -273,11 +274,64 @@ func UpdateDynamodbStoryRequest(ctx *fiber.Ctx, client *dynamodb.Client) error {
 		return fiber.NewError(fiber.StatusBadRequest, err.Error())
 	}
 
+	// if content.Id == "" {
+	// 	content.Id = story.Id
+	// }
+
+	// if content.Title == "" {
+	// 	content.Title = story.Title
+	// }
+
 	ctx.Response().StatusCode()
 	ctx.Response().Header.Add("Content-Type", "application/json")
 	return ctx.JSON(models.JSONResponse{
 		Code:    fiber.StatusOK,
-		Data:     models.DynamoStoryResponseStruct(content),
+		Data:    models.DynamoStoryResponseStruct(content),
 		Message: "Request successful",
 	})
+}
+
+/*
+ */
+func DeleteDynamodbStoryRequest(ctx *fiber.Ctx, client *dynamodb.Client) error {
+	var err error
+	log.Println("Delete dynamodb story request.")
+	if client == nil {
+		return errors.New(helpers.DynamodbResponseMessages["nilClient"])
+	}
+
+	id, err := helpers.GetRequestHeaderID(ctx)
+	if err != nil {
+		return fiber.NewError(fiber.StatusBadRequest, err.Error())
+	}
+
+	title := helpers.GetRequestHeader(ctx, "Title")
+	log.Println("Delete dynamodb story request. title ", title)
+	if title == "" {
+		return fiber.NewError(fiber.StatusBadRequest, "Story Title not provided.")
+	}
+
+	table := mutation.TableBasics{
+		DynamoDbClient: client,
+		TableName:      "Story",
+	}
+
+	story := models.DynamoStoryDatabaseStruct{
+		Id:    id,
+		Title: title,
+	}
+
+	// Update story, in database, from content provided.
+	err = table.DeleteStory(story)
+	if err != nil {
+		return fiber.NewError(fiber.StatusBadRequest, err.Error())
+	}
+
+	ctx.Response().StatusCode()
+	ctx.Response().Header.Add("Content-Type", "application/json")
+	return ctx.JSON(models.JSONResponse{
+		Code:    fiber.StatusOK,
+		Message: fmt.Sprintf("Request to delete story successful id:%s", id),
+	})
+
 }

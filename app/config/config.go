@@ -8,6 +8,12 @@ import (
 	"github.com/joho/godotenv"
 )
 
+type AWSConfiguration struct {
+	AccessKeyID     string `json:"accessKeyID"`
+	SecretAccessKey string `json:"secretAccessKey"`
+	SessionToken    string `json:"sessionToken"`
+}
+
 type RedisConfiguration struct {
 	User     string `json:"user"`
 	Host     string `json:"host"`
@@ -24,6 +30,12 @@ type PostgreSQLConfiguration struct {
 	DatabaseName string `json:"databaseName"`
 }
 
+type DynamodbConfiguration struct {
+	Aws            AWSConfiguration `json:"aws"`
+	StoryTableName string           `json:"storyTableName"`
+	UserTableName  string           `json:"userTableName"`
+}
+
 type DatabaseConfig struct {
 	Environment string                  `json:"environment"`
 	Port        string                  `json:"port"`
@@ -34,6 +46,7 @@ type DatabaseConfig struct {
 	Charset     string                  `json:"charset"`
 	Redis       RedisConfiguration      `json:"redis"`
 	Postgres    PostgreSQLConfiguration `json:"postgres"`
+	Dynamodb    DynamodbConfiguration   `json:"dynamodb"`
 }
 
 type Config struct {
