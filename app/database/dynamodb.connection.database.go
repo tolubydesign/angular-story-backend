@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"log"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/config"
@@ -83,14 +84,26 @@ func CreateDynamoClient() (*dynamodb.Client, error) {
 
 	// setup database with dummy data
 	if env == "development" {
+		// Check that story table is in dynamo db
 		tableFound, err := StoryTableExists(dynamoSingleton)
 		if err != nil {
 			return dynamoSingleton, err
 		}
 
 		if tableFound == false {
-			fmt.Println("Table 'Story' table was not found. Attempting to create a new table")
+			fmt.Println("Table 'Story' table was not found. Attempting to create a new Story table.")
 			SetupStoryDatabase(dynamoSingleton)
+		}
+
+		// Check that user table is in the dynamo db
+		userTableFound, err := UserTableExists(dynamoSingleton)
+		if err != nil {
+			return dynamoSingleton, err
+		}
+
+		if userTableFound == false {
+			log.Println("Table 'User' table was not found. Attempting to create a new User table.")
+			SetupUserData(dynamoSingleton)
 		}
 	}
 
@@ -110,10 +123,11 @@ Check that the required Story table exists in the database.
 */
 func StoryTableExists(client *dynamodb.Client) (bool, error) {
 	var exists = false
-	tableName := "Story"
+	configuration, err := envConfiguration.GetConfiguration()
+	name := configuration.Configuration.Dynamodb.StoryTableName
 	table := query.TableBasics{
 		DynamoDbClient: client,
-		TableName:      tableName,
+		TableName:      name,
 	}
 
 	tables, err := table.ListDynamodbTables()
@@ -130,7 +144,40 @@ func StoryTableExists(client *dynamodb.Client) (bool, error) {
 	}
 
 	if exists {
-		fmt.Println("Story database table exists")
+		log.Println("'Story' dynamo table exists")
+	}
+
+	return exists, err
+}
+
+// Check that User Dynamo db Table exists.
+func UserTableExists(client *dynamodb.Client) (bool, error) {
+	var exists = false
+	configuration, err := envConfiguration.GetConfiguration()
+	name := configuration.Configuration.Dynamodb.UserTableName
+	if err != nil {
+		return exists, err
+	}
+
+	table := query.TableBasics{
+		DynamoDbClient: client,
+		TableName:      name,
+	}
+
+	tables, err := table.ListDynamodbTables()
+	if err != nil {
+		return exists, err
+	}
+
+	// Check for story table in array of table names
+	for _, a := range tables {
+		if a == name {
+			exists = true
+		}
+	}
+
+	if exists {
+		log.Println("'User' dynamo table exists")
 	}
 
 	return exists, err
@@ -146,27 +193,27 @@ Critical research
 */
 func SetupStoryDatabase(client *dynamodb.Client) error {
 	var err error
+	configuration, err := envConfiguration.GetConfiguration()
 	if client == nil {
 		return errors.New("Database is unreachable")
 	}
 
 	// Reading:
 	// [Pointer receivers](https://go.dev/tour/methods/4)
-	tableName := "Story"
 	table := mutation.TableBasics{
 		DynamoDbClient: client,
-		TableName:      *aws.String(tableName),
+		TableName:      *aws.String(configuration.Configuration.Dynamodb.StoryTableName),
 	}
 
 	// Table structure
 	fmt.Println("Setting up Story Database structure")
-	tableDescription, err := table.CreateDynamoDBTable(mutation.CreateTableStruct{
+	description, err := table.CreateDynamoDBTable(mutation.CreateTableStruct{
 		// Add attribute definition
 		AttributeDefinition: []types.AttributeDefinition{{
 			AttributeName: aws.String("id"),
 			AttributeType: types.ScalarAttributeTypeS,
 		}, {
-			AttributeName: aws.String("title"),
+			AttributeName: aws.String("creator"),
 			AttributeType: types.ScalarAttributeTypeS,
 		}},
 
@@ -175,7 +222,7 @@ func SetupStoryDatabase(client *dynamodb.Client) error {
 			AttributeName: aws.String("id"),
 			KeyType:       types.KeyTypeHash,
 		}, {
-			AttributeName: aws.String("title"),
+			AttributeName: aws.String("creator"),
 			KeyType:       types.KeyTypeRange,
 		}},
 	})
@@ -184,11 +231,58 @@ func SetupStoryDatabase(client *dynamodb.Client) error {
 		return err
 	}
 
-	fmt.Printf("\nInformation about newly created dynamodb table, %v", tableDescription)
+	fmt.Printf("\nInformation about newly created dynamodb table, %v", description)
 	err = helpers.PopulateStoryDatabase(table)
 	if err != nil {
 		return err
 	}
 
+	return err
+}
+
+// Create User table structure, in Dynamo database.
+func SetupUserData(client *dynamodb.Client) error {
+	var err error
+	configuration, err := envConfiguration.GetConfiguration()
+	if client == nil {
+		return errors.New("Database is unreachable")
+	}
+
+	table := mutation.TableBasics{
+		DynamoDbClient: client,
+		TableName:      *aws.String(configuration.Configuration.Dynamodb.UserTableName),
+	}
+
+	// Setup User table structure
+	log.Println("Setting up User Database structure")
+	_, err = table.CreateDynamoDBTable(mutation.CreateTableStruct{
+		// Add attribute definition
+		AttributeDefinition: []types.AttributeDefinition{{
+			AttributeName: aws.String("id"),
+			AttributeType: types.ScalarAttributeTypeS,
+		}, {
+			AttributeName: aws.String("email"),
+			AttributeType: types.ScalarAttributeTypeS,
+		}},
+
+		// Add key schema
+		KeySchemaElement: []types.KeySchemaElement{{
+			AttributeName: aws.String("id"),
+			KeyType:       types.KeyTypeHash,
+		}, {
+			AttributeName: aws.String("email"),
+			KeyType:       types.KeyTypeRange,
+		}},
+	})
+	if err != nil {
+		return err
+	}
+
+	err = helpers.PopulateUserDatabase(table)
+	if err != nil {
+		return err
+	}
+
+	log.Println("User database structure was generated")
 	return nil
 }

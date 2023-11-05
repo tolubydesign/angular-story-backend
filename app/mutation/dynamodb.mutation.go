@@ -107,7 +107,6 @@ func DeleteDynamoDBTable(client *dynamodb.Client) error {
 	return err
 }
 
-// TODO: add multiple
 // Add a story the DynamoDB table.
 func (basics TableBasics) AddStory(story models.DynamoStoryDatabaseStruct) error {
 	fmt.Println("Adding story to database.")
@@ -122,6 +121,26 @@ func (basics TableBasics) AddStory(story models.DynamoStoryDatabaseStruct) error
 
 	if err != nil {
 		log.Printf("Couldn't add item to table. Reasoning: %v\n", err)
+		return err
+	}
+
+	return err
+}
+
+func (basics TableBasics) AddUser(user models.DatabaseUserStruct) error {
+	log.Println("Add user with id:", user.Id)
+
+	item, err := attributevalue.MarshalMap(user)
+	if err != nil {
+		return err
+	}
+
+	_, err = basics.DynamoDbClient.PutItem(context.TODO(), &dynamodb.PutItemInput{
+		TableName: aws.String(basics.TableName), Item: item,
+	})
+
+	if err != nil {
+		log.Printf("Couldn't add user to table. Reasoning: %v\n", err)
 		return err
 	}
 

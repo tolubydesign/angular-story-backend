@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"log"
 	"time"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
@@ -177,6 +178,55 @@ func PopulateStoryDatabase(table mutation.TableBasics) error {
 	}
 
 	return nil
+}
+
+// Create and add fake data to the database, for testing purposes only
+func PopulateUserDatabase(table mutation.TableBasics) error {
+	log.Println("Populate database with false User data")
+	var err error
+
+	// Upload stories
+	err = table.AddUser(models.DatabaseUserStruct{
+		Id: "default",
+		Email: "owner@false.com",
+		Username: "owner",
+		Name: "Tolu",
+		Surname: "Adesina",
+		Password: "password",
+		AccountLevel: "admin",
+	})
+	if err != nil {
+		return err
+	}
+
+	err = table.AddUser(models.DatabaseUserStruct{
+		Id: "6abf2cb4-ac98-4a56-8e1f-66851b00e241",
+		Email: "tom@false.com",
+		Username: "tommy",
+		Name: "Tom",
+		Surname: "Shelby",
+		Password: "password",
+		AccountLevel: "admin",
+	})
+	if err != nil {
+		return err
+	}
+
+	err = table.AddUser(models.DatabaseUserStruct{
+		Id: "2cff37f9-7a22-4359-a874-8831dfef71d3",
+		Email: "jj@false.com",
+		Username: "jonathen",
+		Name: "Jon",
+		Surname: "Jupitor",
+		Password: "password",
+		AccountLevel: "user",
+	})
+	if err != nil {
+		return err
+	}
+
+
+	return err
 }
 
 // ...
