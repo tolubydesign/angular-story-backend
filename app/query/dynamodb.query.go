@@ -153,3 +153,30 @@ func (basics TableBasics) GetStoryById(id string) (*models.DynamoStoryResponseSt
 
 	return story[0], nil
 }
+
+// Scan database for users
+func (basics TableBasics) FullUserTableScan() ([]models.DatabaseUserStruct, error) {
+	var users []models.DatabaseUserStruct
+	var err error
+
+	response, err := basics.DynamoDbClient.Scan(context.TODO(), &dynamodb.ScanInput{
+		TableName:              aws.String(basics.TableName),
+		ReturnConsumedCapacity: types.ReturnConsumedCapacityTotal,
+	})
+
+	if err != nil {
+		return nil, err
+	}
+
+	err = attributevalue.UnmarshalListOfMaps(response.Items, &users)
+	if err != nil {
+		return nil, err
+	}
+
+	if response.LastEvaluatedKey != nil {
+		log.Println("All items have not been scanned")
+		return nil, errors.New("All items have not been scanned")
+	}
+
+	return users, nil
+}
