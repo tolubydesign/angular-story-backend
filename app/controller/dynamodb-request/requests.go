@@ -14,6 +14,7 @@ import (
 	models "github.com/tolubydesign/angular-story-backend/app/models"
 	mutation "github.com/tolubydesign/angular-story-backend/app/mutation"
 	query "github.com/tolubydesign/angular-story-backend/app/query"
+	"github.com/tolubydesign/angular-story-backend/app/utils"
 )
 
 // Get client connection to dynamodb.
@@ -43,10 +44,10 @@ func CreateNewTable(ctx *fiber.Ctx, client *dynamodb.Client) error {
 
 	ctx.Response().StatusCode()
 	ctx.Response().Header.Add("Content-Type", "application/json")
-	return ctx.JSON(models.JSONResponse{
+	return ctx.JSON(models.HTTPResponse{
 		Code:    fiber.StatusForbidden,
-		Data:    nil,
 		Message: "Function has not been created",
+		Error:   true,
 	})
 }
 
@@ -65,7 +66,7 @@ func GetAllDynamoDBTables(ctx *fiber.Ctx, client *dynamodb.Client) error {
 		return fiber.NewError(fiber.StatusInternalServerError, error.Error(err))
 	}
 
-	response := models.JSONResponse{
+	response := models.HTTPResponse{
 		Code:    fiber.StatusOK,
 		Data:    tables,
 		Message: "Tables found in DynamoDB.",
@@ -100,7 +101,7 @@ func PopulateDynamoDatabase(ctx *fiber.Ctx, client *dynamodb.Client) error {
 
 	ctx.Response().StatusCode()
 	ctx.Response().Header.Add("Content-Type", "application/json")
-	return ctx.JSON(models.JSONResponse{
+	return ctx.JSON(models.HTTPResponse{
 		Code:    fiber.StatusOK,
 		Message: "Request successful",
 	})
@@ -111,7 +112,7 @@ List all stories within the database.
 
 - https://towardsdatascience.com/dynamodb-go-sdk-how-to-use-the-scan-and-batch-operations-efficiently-5b41988b4988
 */
-func ListAllStories(ctx *fiber.Ctx, client *dynamodb.Client) error {
+func ListAllStoriesRequest(ctx *fiber.Ctx, client *dynamodb.Client) error {
 	if client == nil {
 		return errors.New(helpers.DynamodbResponseMessages["nilClient"])
 	}
@@ -129,7 +130,7 @@ func ListAllStories(ctx *fiber.Ctx, client *dynamodb.Client) error {
 		return fiber.NewError(fiber.StatusInternalServerError, error.Error(err))
 	}
 
-	response := models.JSONResponse{
+	response := models.HTTPResponse{
 		Code:    fiber.StatusOK,
 		Data:    items,
 		Message: "Request successful",
@@ -164,16 +165,16 @@ func AddStoryRequest(ctx *fiber.Ctx, client *dynamodb.Client) error {
 		return err
 	}
 
+	// Generate new id for story
+	story.Id = helpers.GenerateStringUUID()
 	err = table.AddStory(story)
-
 	if err != nil {
 		// TODO: create better http response
 		return fiber.NewError(fiber.StatusInternalServerError, err.Error())
 	}
 
-	response := models.JSONResponse{
+	response := models.HTTPResponse{
 		Code:    fiber.StatusOK,
-		Data:    nil,
 		Message: "Story added successfully",
 	}
 
@@ -206,11 +207,6 @@ func GetStoryByIdRequest(ctx *fiber.Ctx, client *dynamodb.Client) error {
 		ctx.Response().StatusCode()
 		ctx.Response().Header.Add("Content-Type", "application/json")
 		return fiber.NewError(fiber.StatusInternalServerError, "Invalid ID provided")
-		// return ctx.JSON(models.JSONResponse{
-		// 	Type:    "success",
-		// 	Data:    story,
-		// 	Message: "Request successfully",
-		// })
 	}
 
 	// Setup table
@@ -229,7 +225,7 @@ func GetStoryByIdRequest(ctx *fiber.Ctx, client *dynamodb.Client) error {
 
 	ctx.Response().StatusCode()
 	ctx.Response().Header.Add("Content-Type", "application/json")
-	return ctx.JSON(models.JSONResponse{
+	return ctx.JSON(models.HTTPResponse{
 		Code:    fiber.StatusOK,
 		Data:    story,
 		Message: "Request successfully",
@@ -243,7 +239,7 @@ If the user does not provide both id and context, with "title", "description" an
 the request will return an error.
 */
 func UpdateDynamodbStoryRequest(ctx *fiber.Ctx, client *dynamodb.Client) error {
-	fmt.Println("Update dynamodb story request.")
+	log.Println("Update dynamodb story request.")
 	var err error
 	configuration, err := config.GetConfiguration()
 	if client == nil {
@@ -253,6 +249,12 @@ func UpdateDynamodbStoryRequest(ctx *fiber.Ctx, client *dynamodb.Client) error {
 	id, err := helpers.GetRequestHeaderID(ctx)
 	if err != nil {
 		return fiber.NewError(fiber.StatusBadRequest, err.Error())
+	}
+
+	creator := helpers.GetRequestHeader(ctx, "Creator")
+	validCreator := utils.ValidateString(creator)
+	if validCreator != nil {
+		return fiber.NewError(fiber.StatusBadRequest, "Invalid creator value provided.")
 	}
 
 	// Get body context
@@ -267,11 +269,9 @@ func UpdateDynamodbStoryRequest(ctx *fiber.Ctx, client *dynamodb.Client) error {
 		TableName:      configuration.Configuration.Dynamodb.StoryTableName,
 	}
 
-	fmt.Println("id: ", id)
-	fmt.Println("story:", story)
-
 	story = models.DynamoStoryDatabaseStruct{
 		Id:          id,
+		Creator:     creator,
 		Title:       story.Title,
 		Description: story.Description,
 		Content:     story.Content,
@@ -283,17 +283,11 @@ func UpdateDynamodbStoryRequest(ctx *fiber.Ctx, client *dynamodb.Client) error {
 		return fiber.NewError(fiber.StatusBadRequest, err.Error())
 	}
 
-	// if content.Id == "" {
-	// 	content.Id = story.Id
-	// }
-
-	// if content.Title == "" {
-	// 	content.Title = story.Title
-	// }
+	// TODO: add undefined parameters, content.creator & content.id, in response.
 
 	ctx.Response().StatusCode()
 	ctx.Response().Header.Add("Content-Type", "application/json")
-	return ctx.JSON(models.JSONResponse{
+	return ctx.JSON(models.HTTPResponse{
 		Code:    fiber.StatusOK,
 		Data:    models.DynamoStoryResponseStruct(content),
 		Message: "Request successful",
@@ -301,7 +295,8 @@ func UpdateDynamodbStoryRequest(ctx *fiber.Ctx, client *dynamodb.Client) error {
 }
 
 /*
- */
+Delete single story item in dynamo database.
+*/
 func DeleteDynamodbStoryRequest(ctx *fiber.Ctx, client *dynamodb.Client) error {
 	log.Println("Delete dynamodb story request.")
 	var err error
@@ -315,9 +310,9 @@ func DeleteDynamodbStoryRequest(ctx *fiber.Ctx, client *dynamodb.Client) error {
 		return fiber.NewError(fiber.StatusBadRequest, err.Error())
 	}
 
-	title := helpers.GetRequestHeader(ctx, "Title")
-	log.Println("Delete dynamodb story request. title ", title)
-	if title == "" {
+	creator := helpers.GetRequestHeader(ctx, "Creator")
+	log.Println("Delete dynamodb story request. creator ", creator)
+	if creator == "" {
 		return fiber.NewError(fiber.StatusBadRequest, "Story Title not provided.")
 	}
 
@@ -327,8 +322,8 @@ func DeleteDynamodbStoryRequest(ctx *fiber.Ctx, client *dynamodb.Client) error {
 	}
 
 	story := models.DynamoStoryDatabaseStruct{
-		Id:    id,
-		Title: title,
+		Id:      id,
+		Creator: creator,
 	}
 
 	// Update story, in database, from content provided.
@@ -339,7 +334,7 @@ func DeleteDynamodbStoryRequest(ctx *fiber.Ctx, client *dynamodb.Client) error {
 
 	ctx.Response().StatusCode()
 	ctx.Response().Header.Add("Content-Type", "application/json")
-	return ctx.JSON(models.JSONResponse{
+	return ctx.JSON(models.HTTPResponse{
 		Code:    fiber.StatusOK,
 		Message: fmt.Sprintf("Request to delete story successful id:%s", id),
 	})
@@ -378,7 +373,7 @@ func ListAllUsersRequest(ctx *fiber.Ctx, client *dynamodb.Client) error {
 
 	ctx.Response().StatusCode()
 	ctx.Response().Header.Add("Content-Type", "application/json")
-	return ctx.JSON(models.JSONResponse{
+	return ctx.JSON(models.HTTPResponse{
 		Code:    fiber.StatusOK,
 		Data:    userJson,
 		Message: "Request successful",

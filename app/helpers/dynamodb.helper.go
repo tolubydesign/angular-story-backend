@@ -187,12 +187,12 @@ func PopulateUserDatabase(table mutation.TableBasics) error {
 
 	// Upload stories
 	err = table.AddUser(models.DatabaseUserStruct{
-		Id: "default",
-		Email: "owner@false.com",
-		Username: "owner",
-		Name: "Tolu",
-		Surname: "Adesina",
-		Password: "password",
+		Id:           "default",
+		Email:        "owner@false.com",
+		Username:     "owner",
+		Name:         "Tolu",
+		Surname:      "Adesina",
+		Password:     "password",
 		AccountLevel: "admin",
 	})
 	if err != nil {
@@ -200,12 +200,12 @@ func PopulateUserDatabase(table mutation.TableBasics) error {
 	}
 
 	err = table.AddUser(models.DatabaseUserStruct{
-		Id: "6abf2cb4-ac98-4a56-8e1f-66851b00e241",
-		Email: "tom@false.com",
-		Username: "tommy",
-		Name: "Tom",
-		Surname: "Shelby",
-		Password: "password",
+		Id:           "6abf2cb4-ac98-4a56-8e1f-66851b00e241",
+		Email:        "tom@false.com",
+		Username:     "tommy",
+		Name:         "Tom",
+		Surname:      "Shelby",
+		Password:     "password",
 		AccountLevel: "admin",
 	})
 	if err != nil {
@@ -213,18 +213,17 @@ func PopulateUserDatabase(table mutation.TableBasics) error {
 	}
 
 	err = table.AddUser(models.DatabaseUserStruct{
-		Id: "2cff37f9-7a22-4359-a874-8831dfef71d3",
-		Email: "jj@false.com",
-		Username: "jonathen",
-		Name: "Jon",
-		Surname: "Jupitor",
-		Password: "password",
+		Id:           "2cff37f9-7a22-4359-a874-8831dfef71d3",
+		Email:        "jj@false.com",
+		Username:     "jonathen",
+		Name:         "Jon",
+		Surname:      "Jupitor",
+		Password:     "password",
 		AccountLevel: "user",
 	})
 	if err != nil {
 		return err
 	}
-
 
 	return err
 }
@@ -264,9 +263,16 @@ func GenerateStoryFromRequestContext(ctx *fiber.Ctx) (models.DynamoStoryDatabase
 		return story, err
 	}
 
+	// Check if there is a creator id && undefined creator string value
+	// If body.creator is undefined or nil, set to "default"
+	if (body.Creator == "") || (body.Content == nil) {
+		body.Creator = "default"
+	}
+
 	// TODO: verify content structure of body json provided
 	story = models.DynamoStoryDatabaseStruct{
 		Title:       body.Title,
+		Creator:     body.Creator,
 		Description: body.Description,
 		Content:     body.Content,
 	}

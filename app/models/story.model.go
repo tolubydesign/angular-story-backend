@@ -18,10 +18,6 @@ type StoryContent struct {
 	Children    *[]StoryContent `json:"children"`
 }
 
-type AllStories struct {
-	Story []Story `json:"story"`
-}
-
 type DynamoStoryResponseStruct struct {
 	Id          string        `json:"id" validate:"uuid"`
 	Creator     string        `json:"creator" validate:"required"`

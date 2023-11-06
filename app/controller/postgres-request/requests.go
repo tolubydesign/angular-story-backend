@@ -54,7 +54,7 @@ func GetAllStoriesRequest(ctx *fiber.Ctx, db *sql.DB) error {
 		storyArray = append(storyArray, returningStoryModel)
 	}
 
-	response := models.JSONResponse{
+	response := models.HTTPResponse{
 		Code:    fiber.StatusOK,
 		Data:    storyArray,
 		Message: "Fetch all stories.",
@@ -116,7 +116,7 @@ func GetSingleStoryRequest(ctx *fiber.Ctx, db *sql.DB) error {
 		Content:     content,
 	}
 
-	response := models.JSONResponse{
+	response := models.HTTPResponse{
 		Code:    fiber.StatusOK,
 		Data:    returningResponse,
 		Message: "Fetch single story.",
@@ -181,7 +181,7 @@ func InsertStoryRequest(c *fiber.Ctx, db *sql.DB) error {
 		log.Fatalf("Insert Story Fatal Error - %s", err)
 	}
 
-	response := models.JSONResponse{
+	response := models.HTTPResponse{
 		Code:    fiber.StatusOK,
 		Data:    nil,
 		Message: "Database has been updated.",
@@ -219,7 +219,7 @@ func DeleteStoryRequest(c *fiber.Ctx, db *sql.DB) error {
 	}
 
 	message := fmt.Sprintf("Deleted story with id: %s", id)
-	response := models.JSONResponse{
+	response := models.HTTPResponse{
 		Code:    fiber.StatusOK,
 		Data:    nil,
 		Message: message,
@@ -256,20 +256,18 @@ func UpdateStoryRequest(c *fiber.Ctx, db *sql.DB) error {
 		return response.BasicErrorHandling(c, queryError)
 	}
 
-	message := fmt.Sprintf("Updated story with id: %s", id)
-	response := models.JSONResponse{
-		Code:    fiber.StatusOK,
-		Message: message,
-		Data:    nil,
-	}
-
 	error = database.LogEvent(fmt.Sprintf("REQUEST SUCCESSFUL: update story, id:%s", id))
 	if error != nil {
 		// TODO: create better http response
 		return fiber.NewError(fiber.StatusInternalServerError, error.Error())
 	}
 
+	message := fmt.Sprintf("Updated story with id: %s", id)
 	c.Response().StatusCode()
 	c.Response().Header.Add("Content-Type", "application/json")
-	return c.JSON(response)
+	return c.JSON(models.HTTPResponse{
+		Code:    fiber.StatusOK,
+		Message: message,
+		Data:    nil,
+	})
 }
