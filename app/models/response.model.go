@@ -1,15 +1,10 @@
 package models
 
-type JSONResponse struct {
+type HTTPResponse struct {
 	Code    int         `json:"code"`
 	Data    interface{} `json:"data"`
 	Message string      `json:"message"`
-}
-
-type JsonResponse struct {
-	Type    string  `json:"type"`
-	Data    []Story `json:"data"`
-	Message string  `json:"message"`
+	Error   bool        `json:"error"`
 }
 
 type ErrorResponse struct {

@@ -109,7 +109,7 @@ func DeleteDynamoDBTable(client *dynamodb.Client) error {
 
 // Add a story the DynamoDB table.
 func (basics TableBasics) AddStory(story models.DynamoStoryDatabaseStruct) error {
-	fmt.Println("Adding story to database.")
+	log.Println("Adding story to database.")
 
 	item, err := attributevalue.MarshalMap(story)
 	if err != nil {
@@ -151,55 +151,33 @@ func (basics TableBasics) AddUser(user models.DatabaseUserStruct) error {
 Update existing story in the dynamodb database with new content provided.
 This function uses the `expression` package to build the update expression.
 
-resource - https://docs.aws.amazon.com/amazondynamodb/latest/developerguide/GettingStarted.UpdateItem.html \\
-resource - https://dave.dev/blog/2022/07/06-08-2022-ddbtools/ \\
-resource - https://yuminlee2.medium.com/golang-access-struct-fields-ae320fb74d17 \\
-resource - https://dynobase.dev/dynamodb-golang-query-examples/#update-item
+resource - https://docs.aws.amazon.com/amazondynamodb/latest/developerguide/GettingStarted.UpdateItem.html \
+resource - https://dave.dev/blog/2022/07/06-08-2022-ddbtools/ \
+resource - https://yuminlee2.medium.com/golang-access-struct-fields-ae320fb74d17 \
+resource - https://dynobase.dev/dynamodb-golang-query-examples/#update-item \
 */
 func (basics TableBasics) UpdateDynamoDBTable(story models.DynamoStoryDatabaseStruct) (models.DynamoStoryDatabaseStruct, error) {
-	fmt.Println("Updating existing story, using story content provided.")
+	log.Println("Updating existing story, using story content provided.")
 	var err error
 	var response *dynamodb.UpdateItemOutput
 	var attributeMap models.DynamoStoryDatabaseStruct
 
-	// map[string]map[string]interface{}
 	pointer := &models.DynamoStoryDatabaseStruct{
 		Id:          story.Id,
+		Creator:     story.Creator,
 		Title:       story.Title,
 		Description: story.Description,
 		Content:     story.Content,
 	}
 
-	// storyTitle, err := attributevalue.Marshal(story.Title)
+	// Note: get `types.AttributeValue` value for value provided
+	// t, err := attributevalue.Marshal(story.Title)
 	// if err != nil {
 	// 	return attributeMap, err
 	// }
-
-	// storyDescription, err := attributevalue.Marshal(story.Description)
-	// if err != nil {
-	// 	return attributeMap, err
-	// }
-
-	// storyContent, err := attributevalue.Marshal(story.Content)
-	// if err != nil {
-	// 	return attributeMap, err
-	// }
-
-	// if err != nil {
-	// 	log.Fatalf("Got error marshalling item: %s", err)
-	// }
-
-	// fmt.Println("story title:-- ", fmt.Sprintf("%v", storyTitle))
-	// fmt.Println("story description:-- ", fmt.Sprintf("%v", storyDescription))
-	// fmt.Println("story content:-- ", fmt.Sprintf("%v", storyContent))
-
-	// log.Println(fmt.Sprintf("ID --- %v", (*pointer).Id))
-	// log.Println(fmt.Sprintf("DESCRIPTION --- %v", (*pointer).Description))
-	// log.Println(fmt.Sprintf("TITLE --- %v", (*pointer).Title))
-	// log.Println(fmt.Sprintf("TITLE --- %v", (*pointer).Content))
 
 	update := expression.Set(expression.Name("description"), expression.Value((*pointer).Description))
-	// update.Set(expression.Name("title"), expression.Value((*pointer).Title))
+	update.Set(expression.Name("title"), expression.Value((*pointer).Title))
 	update.Set(expression.Name("content"), expression.Value((*pointer).Content))
 	expr, err := expression.NewBuilder().WithUpdate(update).Build()
 
@@ -209,26 +187,25 @@ func (basics TableBasics) UpdateDynamoDBTable(story models.DynamoStoryDatabaseSt
 		response, err = basics.DynamoDbClient.UpdateItem(context.TODO(), &dynamodb.UpdateItemInput{
 			TableName: aws.String(basics.TableName),
 			Key: map[string]types.AttributeValue{
-				"id":    &types.AttributeValueMemberS{Value: (*pointer).Id},
-				"title": &types.AttributeValueMemberS{Value: (*pointer).Title},
+				"id":      &types.AttributeValueMemberS{Value: (*pointer).Id},
+				"creator": &types.AttributeValueMemberS{Value: (*pointer).Creator},
 			},
-
 			ExpressionAttributeNames:  expr.Names(),
 			ExpressionAttributeValues: expr.Values(),
 			UpdateExpression:          expr.Update(),
 			ReturnValues:              types.ReturnValueUpdatedNew,
 
-			// Alternative method:
+			// Note: alternative method of making dynamodb request
 			// UpdateExpression:         aws.String("set description = :description, content = :content"),
 			// ExpressionAttributeValues: map[string]types.AttributeValue{
-			// 	// ":title":       &types.AttributeValueMemberS{Value: (*pointer).Title},
+			// 	":title":       &types.AttributeValueMemberS{Value: (*pointer).Title},
 			// 	":description": &types.AttributeValueMemberS{Value: (*pointer).Description},
 			// 	":content":     storyContent,
 			// },
 		})
 
 		consoleResponse := fmt.Sprintf("%v", response)
-		fmt.Println("Update story return response: ", consoleResponse)
+		log.Println("Update story return response: ", consoleResponse)
 
 		if err != nil {
 			log.Printf("Couldn't update story %v. Here's why: %v\n", story.Title, err)

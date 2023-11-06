@@ -93,7 +93,7 @@ func SetupDynamoDBMethods(app *fiber.App) {
 	})
 
 	app.Get("/dynamo-list-stories", func(ctx *fiber.Ctx) error {
-		return dynamodb.ListAllStories(ctx, client)
+		return dynamodb.ListAllStoriesRequest(ctx, client)
 	})
 
 	app.Put("/dynamo-update-story", func(ctx *fiber.Ctx) error {
