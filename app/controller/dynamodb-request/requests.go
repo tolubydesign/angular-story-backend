@@ -380,7 +380,7 @@ func ListAllUsersRequest(ctx *fiber.Ctx, client *dynamodb.Client) error {
 	})
 }
 
-// Login to user account
+// Login (Sign In) to user account
 func UserLoginRequest(c *fiber.Ctx, client *dynamodb.Client) error {
 	var user models.DatabaseUserStruct
 	if client == nil {
@@ -402,7 +402,26 @@ func UserLoginRequest(c *fiber.Ctx, client *dynamodb.Client) error {
 	c.Response().Header.Add("Content-Type", "application/json")
 	return c.JSON(models.HTTPResponse{
 		Code:    fiber.StatusOK,
-		Data: 	verified,
+		Data:    verified,
 		Message: "User login successful",
+	})
+}
+
+// Sign Up user to database
+func UserSignUpRequest(c *fiber.Ctx, client *dynamodb.Client) error {
+	if client == nil {
+		return errors.New(helpers.DynamodbResponseMessages["nilClient"])
+	}
+
+	err := SignUpUser(c, client)
+	if err != nil {
+		return fiber.NewError(fiber.StatusInternalServerError, err.Error())
+	}
+
+	c.Response().StatusCode()
+	c.Response().Header.Add("Content-Type", "application/json")
+	return c.JSON(models.HTTPResponse{
+		Code:    fiber.StatusOK,
+		Message: "User Signed Up successful",
 	})
 }

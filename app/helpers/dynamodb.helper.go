@@ -323,8 +323,36 @@ func GetLoginInfoContext(ctx *fiber.Ctx) (models.DatabaseUserStruct, error) {
 	}
 
 	user = models.DatabaseUserStruct{
-		Email: body.Email,
+		Email:    body.Email,
 		Password: body.Password,
+	}
+
+	return user, nil
+}
+
+// From body context, from http request, extrapolate user information
+func GetSignInInfoContext(c *fiber.Ctx) (models.DatabaseUserStruct, error) {
+	var err error
+	var body models.User
+	var user models.DatabaseUserStruct
+
+	// Get data from fiber context
+	byteBody := c.Body()
+
+	// Convert Struct to JSON
+	json.Unmarshal(byteBody, &body)
+	// json, err := json.Marshal(body.Content)
+	if err != nil {
+		return user, err
+	}
+
+	user = models.DatabaseUserStruct{
+		Name:         body.Name,
+		Surname:      body.Surname,
+		Username:     body.Username,
+		Email:        body.Email,
+		Password:     body.Password,
+		AccountLevel: "user",
 	}
 
 	return user, nil
