@@ -10,7 +10,10 @@ require (
 	github.com/lib/pq v1.10.4
 )
 
-require github.com/aws/aws-sdk-go-v2/service/dynamodbstreams v1.15.7 // indirect
+require (
+	github.com/aws/aws-sdk-go-v2/service/dynamodbstreams v1.15.7 // indirect
+	github.com/golang-jwt/jwt/v5 v5.1.0 // indirect
+)
 
 require (
 	github.com/andybalholm/brotli v1.0.5 // indirect

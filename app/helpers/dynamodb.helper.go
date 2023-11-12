@@ -304,3 +304,28 @@ func GetRequestHeader(ctx *fiber.Ctx, name string) string {
 
 	return header
 }
+
+// From the request body, get user email and password.
+// User Email and User Password is returned.
+func GetLoginInfoContext(ctx *fiber.Ctx) (models.DatabaseUserStruct, error) {
+	var err error
+	var body models.User
+	var user models.DatabaseUserStruct
+
+	// Get data from fiber context
+	byteBody := ctx.Body()
+
+	// Convert Struct to JSON
+	json.Unmarshal(byteBody, &body)
+	// json, err := json.Marshal(body.Content)
+	if err != nil {
+		return user, err
+	}
+
+	user = models.DatabaseUserStruct{
+		Email: body.Email,
+		Password: body.Password,
+	}
+
+	return user, nil
+}

@@ -116,7 +116,7 @@ func (basics TableBasics) FullTableScan() ([]models.DynamoStoryResponseStruct, e
 }
 
 func (basics TableBasics) GetStoryById(id string) (*models.DynamoStoryResponseStruct, error) {
-	var story []*models.DynamoStoryResponseStruct
+	var stories []*models.DynamoStoryResponseStruct
 	var err error
 	var response *dynamodb.ScanOutput
 
@@ -143,7 +143,7 @@ func (basics TableBasics) GetStoryById(id string) (*models.DynamoStoryResponseSt
 			log.Printf("\nCouldn't scan for story with id %v Error: %v\n", id, err)
 			return nil, err
 		} else {
-			err = attributevalue.UnmarshalListOfMaps(response.Items, &story)
+			err = attributevalue.UnmarshalListOfMaps(response.Items, &stories)
 			if err != nil {
 				log.Printf("Couldn't unmarshal query response. Error: %v\n", err)
 				return nil, err
@@ -151,7 +151,11 @@ func (basics TableBasics) GetStoryById(id string) (*models.DynamoStoryResponseSt
 		}
 	}
 
-	return story[0], nil
+	if len(stories) == 0 {
+		return nil, errors.New("No user found.")
+	}
+
+	return stories[0], nil
 }
 
 // Scan database for users
@@ -178,5 +182,48 @@ func (basics TableBasics) FullUserTableScan() ([]models.DatabaseUserStruct, erro
 		return nil, errors.New("All items have not been scanned")
 	}
 
+	if len(users) == 0 {
+		return nil, errors.New("No data found.")
+	}
+
 	return users, nil
+}
+
+func (basics TableBasics) GetUserByEmail(email string) (*models.DatabaseUserStruct, error) {
+	// TODO: security log
+	var users []*models.DatabaseUserStruct
+	var err error
+	var response *dynamodb.ScanOutput
+	nameBuilder := expression.Name("email").Equal(expression.Value(email))
+	expr, err := expression.NewBuilder().WithFilter(nameBuilder).Build()
+
+	if err != nil {
+		log.Printf("Couldn't build expressions for scan. Here's why: %v\n", err)
+		return nil, err
+	}
+
+	response, err = basics.DynamoDbClient.Scan(context.TODO(), &dynamodb.ScanInput{
+		TableName:                 aws.String(basics.TableName),
+		ExpressionAttributeNames:  expr.Names(),
+		ExpressionAttributeValues: expr.Values(),
+		FilterExpression:          expr.Filter(),
+	})
+
+	if err != nil {
+		log.Printf("\nCouldn't scan for story with id %v Error: %v\n", email, err)
+		return nil, err
+	}
+
+	err = attributevalue.UnmarshalListOfMaps(response.Items, &users)
+	if err != nil {
+		log.Printf("Couldn't unmarshal query response. Error: %v\n", err)
+		return nil, err
+	}
+
+	if len(users) == 0 {
+		// TODO: create more ambiguous error response
+		return nil, errors.New("No data found.")
+	}
+
+	return users[0], nil
 }

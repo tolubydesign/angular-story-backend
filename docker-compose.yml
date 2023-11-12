@@ -47,6 +47,8 @@ services:
     volumes:
       - $PWD/docker/dynamodb:/home/dynamodblocal/data
     working_dir: /home/dynamodblocal
+
+  # Dynamodb Node JS server. Handle incoming and outgoing requesting
   app-node:
     depends_on:
       - dynamodb-local

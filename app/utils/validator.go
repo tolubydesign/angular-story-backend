@@ -82,9 +82,5 @@ func ValidateString(str string) error {
 		return errors.New("A valid string must be provided.")
 	}
 
-	if len(str) > 255 {
-		return errors.New("String is too long.")
-	}
-
 	return nil
 }
