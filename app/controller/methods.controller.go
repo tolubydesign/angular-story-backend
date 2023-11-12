@@ -113,4 +113,8 @@ func SetupDynamoDBMethods(app *fiber.App) {
 	app.Get("/login", func(c *fiber.Ctx) error {
 		return dynamodb.UserLoginRequest(c, client)
 	})
+
+	app.Post("/signup", func(c *fiber.Ctx) error {
+		return dynamodb.UserSignUpRequest(c, client)
+	})
 }
