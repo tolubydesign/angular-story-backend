@@ -108,4 +108,9 @@ func SetupDynamoDBMethods(app *fiber.App) {
 	app.Get("/dynamodb-list-users", func(ctx *fiber.Ctx) error {
 		return dynamodb.ListAllUsersRequest(ctx, client)
 	})
+
+	// Users: login
+	app.Get("/login", func(c *fiber.Ctx) error {
+		return dynamodb.UserLoginRequest(c, client)
+	})
 }

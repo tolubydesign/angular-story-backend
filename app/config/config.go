@@ -37,16 +37,17 @@ type PostgreSQLConfiguration struct {
 }
 
 type DatabaseConfig struct {
-	Environment string                  `json:"environment"`
-	Port        string                  `json:"port"`
-	Dialect     string                  `json:"dialect"`
-	Username    string                  `json:"username"`
-	Password    string                  `json:"password"`
-	Name        string                  `json:"name"`
-	Charset     string                  `json:"charset"`
-	Redis       RedisConfiguration      `json:"redis"`
-	Postgres    PostgreSQLConfiguration `json:"postgres"`
-	Dynamodb    DynamodbConfiguration   `json:"dynamodb"`
+	Environment  string                  `json:"environment"`
+	Port         string                  `json:"port"`
+	Dialect      string                  `json:"dialect"`
+	Username     string                  `json:"username"`
+	Password     string                  `json:"password"`
+	Name         string                  `json:"name"`
+	Charset      string                  `json:"charset"`
+	Redis        RedisConfiguration      `json:"redis"`
+	Postgres     PostgreSQLConfiguration `json:"postgres"`
+	Dynamodb     DynamodbConfiguration   `json:"dynamodb"`
+	JWTSecretKey []byte                  `json:"jwtSecretKey"`
 }
 
 type Config struct {
@@ -77,6 +78,7 @@ func BuildConfiguration() (*Config, error) {
 
 		port := envs["PORT"]
 		environment := envs["ENV"]
+		secret := envs["JWT_SECRET_KEY"]
 
 		// TODO: Get configuration settings from .env file
 		dynamodbConfiguration := DynamodbConfiguration{
@@ -109,16 +111,17 @@ func BuildConfiguration() (*Config, error) {
 
 		configurationSingleton = &Config{
 			Configuration: &DatabaseConfig{
-				Environment: environment,
-				Port:        port,
-				Dialect:     "mysql",
-				Username:    "root",
-				Password:    "",
-				Name:        "testinger",
-				Charset:     "utf8",
-				Redis:       redisConfiguration,
-				Postgres:    postgreSQLConfig,
-				Dynamodb:    dynamodbConfiguration,
+				Environment:  environment,
+				Port:         port,
+				Dialect:      "mysql",
+				Username:     "root",
+				Password:     "",
+				Name:         "testinger",
+				Charset:      "utf8",
+				Redis:        redisConfiguration,
+				Postgres:     postgreSQLConfig,
+				Dynamodb:     dynamodbConfiguration,
+				JWTSecretKey: []byte(secret),
 			},
 		}
 

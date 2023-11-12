@@ -379,3 +379,30 @@ func ListAllUsersRequest(ctx *fiber.Ctx, client *dynamodb.Client) error {
 		Message: "Request successful",
 	})
 }
+
+// Login to user account
+func UserLoginRequest(c *fiber.Ctx, client *dynamodb.Client) error {
+	var user models.DatabaseUserStruct
+	if client == nil {
+		return errors.New(helpers.DynamodbResponseMessages["nilClient"])
+	}
+
+	// Get user login information. Email and password
+	user, err := helpers.GetLoginInfoContext(c)
+	if err != nil {
+		return fiber.NewError(fiber.StatusInternalServerError, err.Error())
+	}
+
+	verified, err := UserVerification(client, user)
+	if err != nil {
+		return fiber.NewError(fiber.StatusInternalServerError, err.Error())
+	}
+
+	c.Response().StatusCode()
+	c.Response().Header.Add("Content-Type", "application/json")
+	return c.JSON(models.HTTPResponse{
+		Code:    fiber.StatusOK,
+		Data: 	verified,
+		Message: "User login successful",
+	})
+}
