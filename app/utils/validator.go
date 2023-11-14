@@ -39,6 +39,12 @@ func ValidatorErrors(err error) map[string]string {
 	return fields
 }
 
+// Confirm that the provide uuid is a valid one
+func ValidUuid(u string) bool {
+	_, err := uuid.Parse(u)
+	return err == nil
+}
+
 // NOTE: The Laws of Reflection - https://go.dev/blog/laws-of-reflection
 func ValidateLimitedStringVariable(str string) error {
 	value := reflect.TypeOf(str)
