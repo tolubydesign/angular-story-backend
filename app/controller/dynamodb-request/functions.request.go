@@ -2,6 +2,7 @@ package dynamodbrequest
 
 import (
 	"errors"
+	"log"
 
 	"github.com/aws/aws-sdk-go-v2/service/dynamodb"
 	"github.com/gofiber/fiber/v2"
@@ -84,4 +85,105 @@ func SignUpUser(c *fiber.Ctx, client *dynamodb.Client) error {
 	}
 
 	return nil
+}
+
+// Make a DynamoDB request to
+func RequestDynamoDeleteStory(c *fiber.Ctx, client *dynamodb.Client) (string, *fiber.Error) {
+	var err error
+	configuration, err := config.GetConfiguration()
+	if err != nil {
+		return "", fiber.NewError(fiber.StatusBadRequest, err.Error())
+	}
+
+	id, err := helpers.GetRequestHeaderID(c)
+	if err != nil {
+		return "", fiber.NewError(fiber.StatusBadRequest, err.Error())
+	}
+
+	// Verify that id is a valid uuid
+	v := utils.ValidUuid(id)
+	if v != true {
+		return "", fiber.NewError(fiber.StatusBadRequest, "Invalid ID provided")
+	}
+
+	creator := helpers.GetRequestHeader(c, "Creator")
+	log.Println("Delete dynamodb story request. creator ", creator)
+	if creator == "" {
+		return id, fiber.NewError(fiber.StatusBadRequest, "Story Title not provided.")
+	}
+
+	table := mutation.TableBasics{
+		DynamoDbClient: client,
+		TableName:      configuration.Configuration.Dynamodb.StoryTableName,
+	}
+
+	story := models.DynamoStoryDatabaseStruct{
+		Id:      id,
+		Creator: creator,
+	}
+
+	// Update story, in database, from content provided.
+	err = table.DeleteStory(story)
+	if err != nil {
+		return "", fiber.NewError(fiber.StatusBadRequest, err.Error())
+	}
+
+	return id, nil
+}
+
+// Make request to Dynamodb. Update a single story. Including title, description and content.
+func RequestDynamoUpdateStory(c *fiber.Ctx, client *dynamodb.Client) (models.DynamoStoryDatabaseStruct, *fiber.Error) {
+	var content models.DynamoStoryDatabaseStruct
+	var err error
+	configuration, err := config.GetConfiguration()
+
+	// Get story id
+	// TODO: move this value to request body
+	id, err := helpers.GetRequestHeaderID(c)
+	if err != nil {
+		return content, fiber.NewError(fiber.StatusBadRequest, err.Error())
+	}
+
+	// Verify that id provided is valid
+	v := utils.ValidUuid(id)
+	if v != true {
+		return content, fiber.NewError(fiber.StatusBadRequest, helpers.DynamodbResponseMessages.InvalidUUID)
+	}
+
+	// Get id of owner of story
+	// TODO: move this value to request body
+	creator := helpers.GetRequestHeader(c, "Creator")
+	validCreator := utils.ValidateString(creator)
+	if validCreator != nil {
+		return content, fiber.NewError(fiber.StatusBadRequest, helpers.DynamodbResponseMessages.InvalidCreatorID)
+	}
+
+	// Get body context
+	// TODO: verify structure of body json provided
+	story, err := helpers.GenerateStoryFromRequestContext(c)
+	if err != nil {
+		return content, fiber.NewError(fiber.StatusInternalServerError, err.Error())
+	}
+
+	table := mutation.TableBasics{
+		DynamoDbClient: client,
+		TableName:      configuration.Configuration.Dynamodb.StoryTableName,
+	}
+
+	story = models.DynamoStoryDatabaseStruct{
+		Id:          id,
+		Creator:     creator,
+		Title:       story.Title,
+		Description: story.Description,
+		Content:     story.Content,
+	}
+
+	// Update story, in database, from content provided.
+	content, err = table.UpdateDynamoDBTable(story)
+	if err != nil {
+		return content, fiber.NewError(fiber.StatusBadRequest, err.Error())
+	}
+
+	// TODO: add undefined parameters, content.creator & content.id, in response.
+	return content, nil
 }
