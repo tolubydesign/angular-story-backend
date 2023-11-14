@@ -299,9 +299,7 @@ func GetRequestHeaderID(ctx *fiber.Ctx) (string, error) {
 func GetRequestHeader(ctx *fiber.Ctx, name string) string {
 	var header string
 	headers := ctx.GetReqHeaders()
-	fmt.Println("headers: ", headers)
 	header = headers[name]
-
 	return header
 }
 

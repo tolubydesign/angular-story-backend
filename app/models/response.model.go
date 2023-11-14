@@ -21,3 +21,9 @@ type Response struct {
 	Code    int    `json:"code"`
 	Message string `json:"message"`
 }
+
+type ResponseMessage struct {
+	NilClient        string
+	InvalidUUID      string
+	InvalidCreatorID string
+}
