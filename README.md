@@ -302,7 +302,6 @@ This is an educational project. The source code is licensed under the MIT licens
 This library is distributed under the [MIT](LICENSE) license.
 
 ## TODO
-
 - [x] User development and production env to handle secret information
 - [x] Create Dynamodb docker container
 - [ ] Switch to Dynamodb, move from PostgreSQL database to dynamodb
@@ -311,5 +310,11 @@ This library is distributed under the [MIT](LICENSE) license.
 - [ ] dynamodb database health checks
 - [ ] Create Users in Dynamodb
 - [ ] Structure database to use user id to restrict story data access
-- [ ] Put (update) request. Dynamodb request
-- [ ] Post (add) request. Dynamodb request
+- [x] Put (update) request. Dynamodb request
+- [x] Post (add) request. Dynamodb request
+- [x] Get (get) story request
+- [ ] ID validation on request
+- [ ] Story Content structure validation
+- [x] JWT token, login support
+- [ ] OAuth Bcrypt support
+- [ ] OAuth 2.0 research - https://oauth.net/2/
