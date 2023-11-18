@@ -145,41 +145,21 @@ Add new story to dynamodb. Content for story is required
 */
 func AddStoryRequest(ctx *fiber.Ctx, client *dynamodb.Client) error {
 	log.Println("Adding Story request.")
-	var err error
-	configuration, err := config.GetConfiguration()
-
 	if client == nil {
 		return fiber.NewError(fiber.StatusInternalServerError, helpers.DynamodbResponseMessages.NilClient)
 	}
 
-	// Setup table
-	// TODO: get table name from env
-	table := mutation.TableBasics{
-		DynamoDbClient: client,
-		TableName:      configuration.Configuration.Dynamodb.StoryTableName,
-	}
-
-	story, err := helpers.GenerateStoryFromRequestContext(ctx)
-	if err != nil {
-		return err
-	}
-
-	// Generate new id for story
-	story.Id = helpers.GenerateStringUUID()
-	err = table.AddStory(story)
-	if err != nil {
-		// TODO: create better http response
-		return fiber.NewError(fiber.StatusInternalServerError, err.Error())
-	}
-
-	response := models.HTTPResponse{
-		Code:    fiber.StatusOK,
-		Message: "Story added successfully",
+	fiberError := AddStory(ctx, client)
+	if fiberError != nil {
+		return fiberError
 	}
 
 	ctx.Response().StatusCode()
 	ctx.Response().Header.Add("Content-Type", "application/json")
-	return ctx.JSON(response)
+	return ctx.JSON(models.HTTPResponse{
+		Code:    fiber.StatusOK,
+		Message: "Story added successfully",
+	})
 }
 
 /*

@@ -1,18 +1,14 @@
 package controller
 
 import (
-	"database/sql"
-
 	"github.com/gofiber/fiber/v2"
 	"github.com/gofiber/fiber/v2/middleware/cors"
 
 	dynamodb "github.com/tolubydesign/angular-story-backend/app/controller/dynamodb-request"
-	postgres "github.com/tolubydesign/angular-story-backend/app/controller/postgres-request"
 )
 
 // Setup REST API request endpoints
-func SetupMethods(app *fiber.App, db *sql.DB) {
-	SetupPostgreSQLMethods(app, db)
+func SetupMethods(app *fiber.App) {
 	SetupDynamoDBMethods(app)
 }
 
@@ -36,33 +32,6 @@ func HandleCORS(app *fiber.App, environment string) {
 	app.Use(cors.New(configuration))
 }
 
-// Setup REST API endpoints that use the PostgreSQL Database
-func SetupPostgreSQLMethods(app *fiber.App, db *sql.DB) {
-	app.Get("/stories", func(ctx *fiber.Ctx) error {
-		return postgres.GetAllStoriesRequest(ctx, db)
-	})
-
-	app.Get("/story", func(ctx *fiber.Ctx) error {
-		return postgres.GetSingleStoryRequest(ctx, db)
-	})
-
-	app.Post("/story", func(ctx *fiber.Ctx) error {
-		return postgres.InsertStoryRequest(ctx, db)
-	})
-
-	app.Delete("/story", func(ctx *fiber.Ctx) error {
-		return postgres.DeleteStoryRequest(ctx, db)
-	})
-
-	app.Put("/story", func(ctx *fiber.Ctx) error {
-		return postgres.UpdateStoryRequest(ctx, db)
-	})
-
-	app.Get("/health", func(c *fiber.Ctx) error {
-		return postgres.CheckHealthRequest(c, db)
-	})
-}
-
 /*
 Setup REST API endpoints that use the Dynamodb Database.
 Connects to dynamodb database. If a connection is not made, process will error out.
@@ -76,36 +45,37 @@ func SetupDynamoDBMethods(app *fiber.App) {
 		panic(err)
 	}
 
-	app.Get("/dynamodb-list-tables", func(ctx *fiber.Ctx) error {
+	// Data
+	app.Get("/list-tables", func(ctx *fiber.Ctx) error {
 		return dynamodb.GetAllDynamoDBTables(ctx, client)
 	})
 
-	app.Post("/dynamo-populate-database", func(ctx *fiber.Ctx) error {
+	app.Post("/populate-database", func(ctx *fiber.Ctx) error {
 		return dynamodb.PopulateDynamoDatabase(ctx, client)
 	})
 
-	app.Post("/dynamo-add-story", func(ctx *fiber.Ctx) error {
+	app.Post("/add-story", func(ctx *fiber.Ctx) error {
 		return dynamodb.AddStoryRequest(ctx, client)
 	})
 
-	app.Get("/dynamo-get-story", func(ctx *fiber.Ctx) error {
+	app.Get("/get-story", func(ctx *fiber.Ctx) error {
 		return dynamodb.GetStoryByIdRequest(ctx, client)
 	})
 
-	app.Get("/dynamo-list-stories", func(ctx *fiber.Ctx) error {
+	app.Get("/list-stories", func(ctx *fiber.Ctx) error {
 		return dynamodb.ListAllStoriesRequest(ctx, client)
 	})
 
-	app.Put("/dynamo-update-story", func(ctx *fiber.Ctx) error {
+	app.Put("/update-story", func(ctx *fiber.Ctx) error {
 		return dynamodb.UpdateDynamodbStoryRequest(ctx, client)
 	})
 
-	app.Delete("/dynamo-remove-story", func(ctx *fiber.Ctx) error {
+	app.Delete("/remove-story", func(ctx *fiber.Ctx) error {
 		return dynamodb.DeleteDynamodbStoryRequest(ctx, client)
 	})
 
 	// Users
-	app.Get("/dynamodb-list-users", func(ctx *fiber.Ctx) error {
+	app.Get("/list-users", func(ctx *fiber.Ctx) error {
 		return dynamodb.ListAllUsersRequest(ctx, client)
 	})
 
@@ -114,7 +84,7 @@ func SetupDynamoDBMethods(app *fiber.App) {
 		return dynamodb.UserLoginRequest(c, client)
 	})
 
-	app.Post("/signup", func(c *fiber.Ctx) error {
+	app.Post("/sign-up", func(c *fiber.Ctx) error {
 		return dynamodb.UserSignUpRequest(c, client)
 	})
 }

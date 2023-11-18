@@ -22,22 +22,10 @@ func main() {
 		panic(err)
 	}
 
-	// Connect to PostgreSQL database
-	_, postgresErr := database.ConnectToPostgreSQLDatabase()
-	if postgresErr != nil {
-		panic(postgresErr)
-	}
-
 	// Connect to Redis database
 	_, redisErr := database.ConnectToRedisDatabase()
 	if redisErr != nil {
 		panic(redisErr)
-	}
-
-	// Capture the connected postgreSQL database
-	postgresDatabase, getPostgresErr := database.GetPostgreSQLDatabaseSingleton()
-	if getPostgresErr != nil {
-		panic(getPostgresErr)
 	}
 
 	environmentPort := config.Configuration.Port
@@ -47,14 +35,10 @@ func main() {
 
 	app := SetupApplication()
 	controller.HandleCORS(app, env)
-	controller.SetupMethods(app, postgresDatabase)
+	controller.SetupMethods(app)
 
 	if environmentPort == "" {
 		environmentPort = "2100"
-	}
-
-	if postgresErr = postgresDatabase.Ping(); postgresErr != nil {
-		panic(postgresErr)
 	}
 
 	log.Fatalln(app.Listen(fmt.Sprintf(":%v", environmentPort)))

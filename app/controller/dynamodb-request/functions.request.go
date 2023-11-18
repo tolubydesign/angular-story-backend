@@ -160,7 +160,7 @@ func RequestDynamoUpdateStory(c *fiber.Ctx, client *dynamodb.Client) (models.Dyn
 
 	// Get body context
 	// TODO: verify structure of body json provided
-	story, err := helpers.GenerateStoryFromRequestContext(c)
+	story, err := helpers.GetStoryFromRequestContext(c)
 	if err != nil {
 		return content, fiber.NewError(fiber.StatusInternalServerError, err.Error())
 	}
@@ -186,4 +186,29 @@ func RequestDynamoUpdateStory(c *fiber.Ctx, client *dynamodb.Client) (models.Dyn
 
 	// TODO: add undefined parameters, content.creator & content.id, in response.
 	return content, nil
+}
+
+// Add a single story to database. 
+// 
+func AddStory(c *fiber.Ctx, client *dynamodb.Client) *fiber.Error {
+	configuration, err := config.GetConfiguration()
+	table := mutation.TableBasics{
+		DynamoDbClient: client,
+		TableName:      configuration.Configuration.Dynamodb.StoryTableName,
+	}
+
+	story, err := helpers.GetStoryFromRequestContext(c)
+	if err != nil {
+		return fiber.NewError(fiber.StatusInternalServerError, err.Error())
+	}
+
+	// Generate new id for story
+	story.Id = helpers.GenerateStringUUID()
+	err = table.AddStory(story)
+	if err != nil {
+		// TODO: create better http response
+		return fiber.NewError(fiber.StatusInternalServerError, err.Error())
+	}
+
+	return nil
 }

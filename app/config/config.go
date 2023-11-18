@@ -28,26 +28,13 @@ type RedisConfiguration struct {
 	Database int    `json:"database"`
 }
 
-type PostgreSQLConfiguration struct {
-	User         string `json:"user"`
-	Host         string `json:"host"`
-	Port         int    `json:"port"`
-	Password     string `json:"password"`
-	DatabaseName string `json:"databaseName"`
-}
-
 type DatabaseConfig struct {
-	Environment  string                  `json:"environment"`
-	Port         string                  `json:"port"`
-	Dialect      string                  `json:"dialect"`
-	Username     string                  `json:"username"`
-	Password     string                  `json:"password"`
-	Name         string                  `json:"name"`
-	Charset      string                  `json:"charset"`
-	Redis        RedisConfiguration      `json:"redis"`
-	Postgres     PostgreSQLConfiguration `json:"postgres"`
-	Dynamodb     DynamodbConfiguration   `json:"dynamodb"`
-	JWTSecretKey []byte                  `json:"jwtSecretKey"`
+	Environment  string                `json:"environment"`
+	Port         string                `json:"port"`
+	Charset      string                `json:"charset"`
+	Redis        RedisConfiguration    `json:"redis"`
+	Dynamodb     DynamodbConfiguration `json:"dynamodb"`
+	JWTSecretKey []byte                `json:"jwtSecretKey"`
 }
 
 type Config struct {
@@ -100,26 +87,12 @@ func BuildConfiguration() (*Config, error) {
 			Database: 0,
 		}
 
-		// TODO: Get configuration from .env file
-		postgreSQLConfig := PostgreSQLConfiguration{
-			User:         "postgres",
-			Host:         "localhost",
-			Port:         5432,
-			Password:     "postgres",
-			DatabaseName: "postgres",
-		}
-
 		configurationSingleton = &Config{
 			Configuration: &DatabaseConfig{
 				Environment:  environment,
 				Port:         port,
-				Dialect:      "mysql",
-				Username:     "root",
-				Password:     "",
-				Name:         "testinger",
 				Charset:      "utf8",
 				Redis:        redisConfiguration,
-				Postgres:     postgreSQLConfig,
 				Dynamodb:     dynamodbConfiguration,
 				JWTSecretKey: []byte(secret),
 			},
