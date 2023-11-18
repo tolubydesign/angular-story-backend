@@ -17,3 +17,7 @@
 - [x] JWT token, login support
 - [ ] OAuth Bcrypt support
 - [ ] OAuth 2.0 research - https://oauth.net/2/
+- [ ] require jwt, user verification, user login and user related story objects
+- (!) [ ] Upload project to lambda.
+- (!) [ ] Integrate AWS CDK
+- [ ] Update endpoint urls (for dynamo db)
