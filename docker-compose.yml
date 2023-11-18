@@ -2,30 +2,6 @@
 # Resource: https://github.com/jdaarevalo/docker_postgres_with_data
 version: '3'
 services:
-  # PostgreSQL
-  postgres_db:
-    image: postgres:15
-    container_name: posgresqlstorycontainer
-    # restart: always
-    environment:
-      - POSTGRES_USER=postgres
-      - POSTGRES_PASSWORD=postgres
-      - POSTGRES_DB=postgres
-      - PGDATA=/var/lib/postgresql/data/pgdata
-    logging:
-      options:
-        max-size: 10m
-        max-file: "3"
-    ports:
-      - '5438:5432'
-      # - '5432:5533'
-    volumes:
-      - $PWD/_postgres_database:/var/lib/postgresql/data
-      - $PWD/init_database/create_tables.sql:/docker-entrypoint-initdb.d/create_tables.sql
-      - $PWD/init_database/fill_tables.sql:/docker-entrypoint-initdb.d/fill_tables.sql
-      - $PWD/init_database/init-table.sql:/docker-entrypoint-initdb.d/init-table.sql
-      - $PWD/init_database/init-database-db.sh:/docker-entrypoint-initdb.d/init-database-db.sh
-
   # DynamoDB 
   # https://docs.aws.amazon.com/amazondynamodb/latest/developerguide/DynamoDBLocal.UsageNotes.html
   # https://davidagood.com/dynamodb-local-go/

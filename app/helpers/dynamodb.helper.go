@@ -248,7 +248,7 @@ func waitForTable(ctx context.Context, db *dynamodb.Client, tn string) error {
 }
 
 // Return Story database struct, based on the fiber body context, provided in the http request.
-func GenerateStoryFromRequestContext(ctx *fiber.Ctx) (models.DynamoStoryDatabaseStruct, error) {
+func GetStoryFromRequestContext(ctx *fiber.Ctx) (models.DynamoStoryDatabaseStruct, error) {
 	var err error
 	var body models.DynamoStoryDatabaseStruct
 	var story models.DynamoStoryDatabaseStruct
@@ -263,6 +263,7 @@ func GenerateStoryFromRequestContext(ctx *fiber.Ctx) (models.DynamoStoryDatabase
 		return story, err
 	}
 
+	// TODO: validate creator as uuid
 	// Check if there is a creator id && undefined creator string value
 	// If body.creator is undefined or nil, set to "default"
 	if (body.Creator == "") || (body.Content == nil) {
