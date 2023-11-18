@@ -1,0 +1,303 @@
+{
+	"info": {
+		"_postman_id": "b60b84c6-440f-41e1-972d-cfddc3e46e46",
+		"name": "Story",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+		"_exporter_id": "8101601"
+	},
+	"item": [
+		{
+			"name": "Health Check",
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "http://127.0.0.1:2100/health",
+					"protocol": "http",
+					"host": [
+						"127",
+						"0",
+						"0",
+						"1"
+					],
+					"port": "2100",
+					"path": [
+						"health"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "List tables",
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "http://127.0.0.1:2100/list-tables",
+					"protocol": "http",
+					"host": [
+						"127",
+						"0",
+						"0",
+						"1"
+					],
+					"port": "2100",
+					"path": [
+						"list-tables"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "List All Story Items",
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "http://127.0.0.1:2100/list-stories",
+					"protocol": "http",
+					"host": [
+						"127",
+						"0",
+						"0",
+						"1"
+					],
+					"port": "2100",
+					"path": [
+						"list-stories"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "List All Users",
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "http://127.0.0.1:2100/list-users",
+					"protocol": "http",
+					"host": [
+						"127",
+						"0",
+						"0",
+						"1"
+					],
+					"port": "2100",
+					"path": [
+						"list-users"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Get Story By ID",
+			"request": {
+				"method": "GET",
+				"header": [
+					{
+						"key": "id",
+						"value": "e00e294a-5ac7-4ee8-993e-970e59fba381",
+						"type": "text"
+					}
+				],
+				"url": {
+					"raw": "http://127.0.0.1:2100/get-story",
+					"protocol": "http",
+					"host": [
+						"127",
+						"0",
+						"0",
+						"1"
+					],
+					"port": "2100",
+					"path": [
+						"get-story"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Sign in",
+			"protocolProfileBehavior": {
+				"disableBodyPruning": true
+			},
+			"request": {
+				"method": "GET",
+				"header": [
+					{
+						"key": "id",
+						"value": "e00e294a-5ac7-4ee8-993e-970e59fba381",
+						"type": "text"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n    \"email\": \"owner@false.com\",\n    \"password\": \"password\"\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "http://127.0.0.1:2100/login",
+					"protocol": "http",
+					"host": [
+						"127",
+						"0",
+						"0",
+						"1"
+					],
+					"port": "2100",
+					"path": [
+						"login"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Populate database",
+			"request": {
+				"method": "POST",
+				"header": [],
+				"url": {
+					"raw": "http://127.0.0.1:2100/populate-database",
+					"protocol": "http",
+					"host": [
+						"127",
+						"0",
+						"0",
+						"1"
+					],
+					"port": "2100",
+					"path": [
+						"populate-database"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Add Story",
+			"request": {
+				"method": "POST",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n    \"title\": \"(001) ADDED postman post request title\",\n    \"description\": \"(001) ADDED postman post request description\",\n    \"content\": {\n        \"children\": [\n            {\n                \"children\": null,\n                \"description\": \"Quisque blandit magna vel lacinia fringilla. Mauris sit amet gravida tellus.\",\n                \"id\": \"ebd00c42-841c-44f2-8e8e-bde095d502c6\",\n                \"name\": \"Porttitor quis ultrices tortor\"\n            },\n            {\n                \"children\": [\n                    {\n                        \"children\": null,\n                        \"description\": \"Quisque blandit magna vel lacinia fringilla. Mauris sit amet gravida tellus.\",\n                        \"id\": \"859da15f-8cbf-4d31-b799-0e1309726534\",\n                        \"name\": \"Porttitor quis ultrices tortor\"\n                    }\n                ],\n                \"description\": \"2 Quisque blandit magna vel lacinia fringilla. Mauris sit amet gravida tellus.\",\n                \"id\": \"c37eeaea-23f1-448e-89bd-1c010605c90e\",\n                \"name\": \"2 Porttitor quis ultrices tortor\"\n            }\n        ],\n        \"description\": \"In aliquet nisi a.\",\n        \"id\": \"7e0d122f-b295-4082-9d7c-242d7b2bd517\",\n        \"name\": \"Nam blandit magna vel lacinia\"\n    }\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "http://127.0.0.1:2100/add-story",
+					"protocol": "http",
+					"host": [
+						"127",
+						"0",
+						"0",
+						"1"
+					],
+					"port": "2100",
+					"path": [
+						"add-story"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Update Story",
+			"request": {
+				"method": "PUT",
+				"header": [
+					{
+						"key": "id",
+						"value": "e00e294a-5ac7-4ee8-993e-970e59fba381",
+						"type": "text"
+					},
+					{
+						"key": "creator",
+						"value": "default",
+						"type": "text"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n    \"title\": \"(postman update 001) UPDATED postman post request title\",\n    \"description\": \"(postman update 001) UPDATED postman post request description\",\n    \"content\": {\n        \"children\": [\n            {\n                \"children\": [\n                    {\n                        \"children\": [\n                            {\n                                \"children\": null,\n                                \"description\": \"Quisque blandit magna vel lacinia fringilla. Mauris sit amet gravida tellus.\",\n                                \"id\": \"ebd00c42-841c-44f2-8e8e-bde095d502c6\",\n                                \"name\": \"Porttitor quis ultrices tortor\"\n                            }\n                        ],\n                        \"description\": \"Quisque blandit magna vel lacinia fringilla. Mauris sit amet gravida tellus.\",\n                        \"id\": \"ebd00c42-841c-44f2-8e8e-bde095d502c6\",\n                        \"name\": \"Porttitor quis ultrices tortor\"\n                    }\n                ],\n                \"description\": \"Quisque blandit magna vel lacinia fringilla. Mauris sit amet gravida tellus.\",\n                \"id\": \"ebd00c42-841c-44f2-8e8e-bde095d502c6\",\n                \"name\": \"Porttitor quis ultrices tortor\"\n            }\n        ],\n        \"description\": \"In aliquet nisi a.\",\n        \"id\": \"7e0d122f-b295-4082-9d7c-242d7b2bd517\",\n        \"name\": \"Nam blandit magna vel lacinia\"\n    }\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "http://127.0.0.1:2100/update-story",
+					"protocol": "http",
+					"host": [
+						"127",
+						"0",
+						"0",
+						"1"
+					],
+					"port": "2100",
+					"path": [
+						"update-story"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Delete Single Story",
+			"request": {
+				"method": "DELETE",
+				"header": [
+					{
+						"key": "id",
+						"value": "2fd6c07c-82e3-45ac-a877-a3fe75e7e787",
+						"type": "text"
+					},
+					{
+						"key": "creator",
+						"value": "(1) UPDATED postman post request title",
+						"type": "text"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "http://127.0.0.1:2100/remove-story",
+					"protocol": "http",
+					"host": [
+						"127",
+						"0",
+						"0",
+						"1"
+					],
+					"port": "2100",
+					"path": [
+						"remove-story"
+					]
+				}
+			},
+			"response": []
+		}
+	]
+}
