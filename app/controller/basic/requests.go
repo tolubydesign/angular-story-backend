@@ -1,4 +1,4 @@
-package controller
+package basicrequest
 
 import (
 	"database/sql"

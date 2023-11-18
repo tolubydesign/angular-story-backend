@@ -33,6 +33,10 @@
 *.dll
 *.so
 *.dylib
+# local env files
+.env*.local
+.env*.production
+.env*.development
 
 # Test binary, built with `go test -c`
 *.test
@@ -47,3 +51,7 @@
 /bin
 build
 angular-story-backend
+/docker
+
+# Hide any file base on how the filename starts
+false.*

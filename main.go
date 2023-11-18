@@ -15,24 +15,17 @@ import (
 )
 
 func main() {
-	config, configError := config.GetConfiguration()
-	if configError != nil {
-		log.Fatal("Error loading .env file")
+	// Setup project configuration
+	config, err := config.BuildConfiguration()
+	if err != nil {
+		log.Fatal(err)
+		panic(err)
 	}
 
-	_, postgresErr := database.ConnectToPostgreSQLDatabase()
-	if postgresErr != nil {
-		panic(postgresErr)
-	}
-
+	// Connect to Redis database
 	_, redisErr := database.ConnectToRedisDatabase()
 	if redisErr != nil {
 		panic(redisErr)
-	}
-
-	postgresDatabase, getPostgresErr := database.GetPostgreSQLDatabaseSingleton()
-	if getPostgresErr != nil {
-		panic(getPostgresErr)
 	}
 
 	environmentPort := config.Configuration.Port
@@ -42,14 +35,10 @@ func main() {
 
 	app := SetupApplication()
 	controller.HandleCORS(app, env)
-	controller.SetupMethods(app, postgresDatabase)
+	controller.SetupMethods(app)
 
 	if environmentPort == "" {
 		environmentPort = "2100"
-	}
-
-	if postgresErr = postgresDatabase.Ping(); postgresErr != nil {
-		panic(postgresErr)
 	}
 
 	log.Fatalln(app.Listen(fmt.Sprintf(":%v", environmentPort)))
