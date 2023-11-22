@@ -12,12 +12,13 @@ type AWSConfiguration struct {
 	AccessKeyID     string `json:"accessKeyID"`
 	SecretAccessKey string `json:"secretAccessKey"`
 	SessionToken    string `json:"sessionToken"`
+	Region          string `json:"region"`
+	AccountID       string `json:"accountID"`
 }
 
 type DynamodbConfiguration struct {
-	Aws            AWSConfiguration `json:"aws"`
-	StoryTableName string           `json:"storyTableName"`
-	UserTableName  string           `json:"userTableName"`
+	StoryTableName string `json:"storyTableName"`
+	UserTableName  string `json:"userTableName"`
 }
 
 type RedisConfiguration struct {
@@ -35,6 +36,7 @@ type DatabaseConfig struct {
 	Redis        RedisConfiguration    `json:"redis"`
 	Dynamodb     DynamodbConfiguration `json:"dynamodb"`
 	JWTSecretKey []byte                `json:"jwtSecretKey"`
+	AWS          AWSConfiguration      `json:"aws"`
 }
 
 type Config struct {
@@ -67,13 +69,15 @@ func BuildConfiguration() (*Config, error) {
 		environment := envs["ENV"]
 		secret := envs["JWT_SECRET_KEY"]
 
+		aws := AWSConfiguration{
+			AccessKeyID:     envs["AWS_ACCESS_KEY_ID"],
+			SecretAccessKey: envs["AWS_SECRET_ACCESS_KEY"],
+			SessionToken:    "dummy",
+			Region:       envs["AWS_REGION"],
+			AccountID:    envs["AWS_ACCOUNT_ID"],
+		}
 		// TODO: Get configuration settings from .env file
 		dynamodbConfiguration := DynamodbConfiguration{
-			Aws: AWSConfiguration{
-				AccessKeyID:     envs["AWS_ACCESS_KEY_ID"],
-				SecretAccessKey: envs["AWS_SECRET_ACCESS_KEY"],
-				SessionToken:    "dummy",
-			},
 			StoryTableName: envs["DYNAMODB_STORY_TABLE_NAME"],
 			UserTableName:  envs["DYNAMODB_USER_TABLE_NAME"],
 		}
@@ -95,6 +99,7 @@ func BuildConfiguration() (*Config, error) {
 				Redis:        redisConfiguration,
 				Dynamodb:     dynamodbConfiguration,
 				JWTSecretKey: []byte(secret),
+				AWS:          aws,
 			},
 		}
 
