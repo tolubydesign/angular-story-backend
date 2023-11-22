@@ -5,45 +5,33 @@ import (
 	"fmt"
 	"log"
 
-	"github.com/tolubydesign/angular-story-backend/app/config"
-	"github.com/tolubydesign/angular-story-backend/app/controller"
-	"github.com/tolubydesign/angular-story-backend/app/database"
-
 	"github.com/gofiber/fiber/v2"
-
-	_ "github.com/lib/pq"
+	configuration "github.com/tolubydesign/angular-story-backend/app/config"
+	"github.com/tolubydesign/angular-story-backend/app/controller"
+	"github.com/tolubydesign/angular-story-backend/app/logging"
+	"github.com/tolubydesign/angular-story-backend/cdk"
 )
 
 func main() {
 	// Setup project configuration
-	config, err := config.BuildConfiguration()
+	config, err := configuration.BuildConfiguration()
+	logging.Event("ENVIRONMENT %v", config.Configuration.Environment)
+
 	if err != nil {
-		log.Fatal(err)
+		logging.Error(err.Error())
 		panic(err)
 	}
 
-	// Connect to Redis database
-	_, redisErr := database.ConnectToRedisDatabase()
-	if redisErr != nil {
-		panic(redisErr)
+	if config.Configuration.Environment == "development" {
+		APIDevelopment()
 	}
 
-	environmentPort := config.Configuration.Port
-	env := config.Configuration.Environment
-	fmt.Printf("PORT  = %v \n", environmentPort)
-	fmt.Printf("ENV  = %v \n", env)
-
-	app := SetupApplication()
-	controller.HandleCORS(app, env)
-	controller.SetupMethods(app)
-
-	if environmentPort == "" {
-		environmentPort = "2100"
+	if config.Configuration.Environment == "production" {
+		cdk.RunCDK()
 	}
-
-	log.Fatalln(app.Listen(fmt.Sprintf(":%v", environmentPort)))
 }
 
+// TODO: description
 func SetupApplication() *fiber.App {
 	return fiber.New(fiber.Config{
 		// Override default error handler
@@ -68,4 +56,25 @@ func SetupApplication() *fiber.App {
 			return nil
 		},
 	})
+}
+
+// TODO: description
+func APIDevelopment() {
+	configuration, err := configuration.GetConfiguration()
+	if err != nil {
+		panic(err)
+	}
+
+	environmentPort := configuration.Configuration.Port
+	env := configuration.Configuration.Environment
+
+	app := SetupApplication()
+	controller.HandleCORS(app, env)
+	controller.SetupMethods(app)
+
+	if environmentPort == "" {
+		environmentPort = "2100"
+	}
+
+	log.Fatalln(app.Listen(fmt.Sprintf(":%v", environmentPort)))
 }
