@@ -36,7 +36,7 @@ func CreateDynamoClient() (*dynamodb.Client, error) {
 
 	if env == "development" {
 		// Development endpoint
-		dynamoConfigWithRegion = config.WithRegion("us-east-2")
+		dynamoConfigWithRegion = config.WithRegion(configuration.Configuration.AWS.Region)
 
 		dynamoConfigEndpoint = config.WithEndpointResolverWithOptions(aws.EndpointResolverWithOptionsFunc(
 			func(service, region string, options ...interface{}) (aws.Endpoint, error) {
@@ -53,7 +53,7 @@ func CreateDynamoClient() (*dynamodb.Client, error) {
 		})
 	} else {
 		// Production endpoint
-		dynamoConfigWithRegion = config.WithRegion("us-east-2")
+		dynamoConfigWithRegion = config.WithRegion(configuration.Configuration.AWS.Region)
 
 		dynamoConfigEndpoint = config.WithEndpointResolverWithOptions(aws.EndpointResolverWithOptionsFunc(
 			func(service, region string, options ...interface{}) (aws.Endpoint, error) {
@@ -63,7 +63,9 @@ func CreateDynamoClient() (*dynamodb.Client, error) {
 
 		dynamoConfigCredentialProvider = config.WithCredentialsProvider(credentials.StaticCredentialsProvider{
 			Value: aws.Credentials{
-				AccessKeyID: "DUMMYIDEXAMPLE", SecretAccessKey: "DUMMYEXAMPLEKEY", SessionToken: "dummy",
+				AccessKeyID: configuration.Configuration.AWS.AccessKeyID,
+				SecretAccessKey: configuration.Configuration.AWS.SecretAccessKey,
+				SessionToken: "dummy",
 				Source: "Hard-coded credentials; values are irrelevant for local DynamoDB",
 			},
 		})
