@@ -18,10 +18,20 @@ import (
 )
 
 // resource - https://harshq.medium.com/building-apps-with-aws-sdk-for-golang-api-gateway-and-lambda-b254858b1d71
+// 					-- https://gist.github.com/harshq/3c821984a96782d5aea329f132a384cb#file-test-api-go
 // resource - https://docs.aws.amazon.com/apigateway/latest/developerguide/http-api-dynamo-db.html#http-api-dynamo-db-create-table
 // resource - https://pkg.go.dev/github.com/aws/aws-cdk-go/awscdk/awsapigateway#section-readme
 // resource - https://pkg.go.dev/github.com/aws/aws-cdk-go/awscdk/awsdynamodb
 // (!) resource - https://github.com/aws-samples/serverless-patterns/tree/main/apigw-lambda-dynamodb-cdk-go
+// resource - https://serverlessland.com/patterns/apigw-lambda-dynamodb-cdk-go
+// (!) resource - https://github.com/cowcoa/aws-cdk-go-examples/blob/master/serverless/apigateway_lambda_ddb/cdk_main.go
+// (!) resource - https://github.com/cowcoa/aws-cdk-go-examples/tree/master/serverless/apigateway_lambda_ddb
+// (!) resource - https://github.com/abhirockzz/dynamodb-streams-lambda-golang
+// resource - https://itnext.io/learn-how-to-use-dynamodb-streams-with-aws-lambda-and-go-f7abcee4d987
+// resource - https://docs.aws.amazon.com/apigateway/latest/developerguide/http-api-dynamo-db.html#http-api-dynamo-db-create-table
+// resource - https://pkg.go.dev/github.com/aws/aws-cdk-go/awscdk/awsapigateway#section-readme
+
+
 
 type CdkGolangStackProps struct {
 	awscdk.StackProps
@@ -40,37 +50,54 @@ func NewCdkGolangStack(scope constructs.Construct, id string, props *CdkGolangSt
 		panic(err)
 	}
 
+	// DynamoDB related constants
+	const (
+		storyTableName          = "story"
+		partitionKeyName        = "email"
+		dynamoDBTableNameEnvVar = "DYNAMODB_TABLE_NAME"
+	)
+
 	if props != nil {
 		sprops = props.StackProps
 	}
 	stack := awscdk.NewStack(scope, &id, &sprops)
 
-	sourceDynamoDBTable := awsdynamodb.NewTable(stack, jsii.String("Story"),
-		&awsdynamodb.TableProps{
-			PartitionKey: &awsdynamodb.Attribute{
-				Name: jsii.String("email"),
-				Type: awsdynamodb.AttributeType_STRING},
-			Stream: awsdynamodb.StreamViewType_NEW_AND_OLD_IMAGES})
-
 	// Create DynamoDB Base table.
 	// Data Modeling
 	// name(PK), time(SK),                  comment, chat_room
 	// string    string(micro sec unixtime)	string   string
-	chatTable := awsdynamodb.NewTable(stack, jsii.String(storyDynamoDBTable), &awsdynamodb.TableProps{
-		TableName:     jsii.String(*stack.StackName() + "-" + config.DynamoDBTable),
+	// chatTable := awsdynamodb.NewTable(stack, jsii.String(storyDynamoDBTable), &awsdynamodb.TableProps{
+	// 	TableName:     jsii.String(*stack.StackName() + "-Chat"),
+	// 	BillingMode:   awsdynamodb.BillingMode_PAY_PER_REQUEST,
+	// 	ReadCapacity:  jsii.Number(1),
+	// 	WriteCapacity: jsii.Number(1),
+	// 	RemovalPolicy: awscdk.RemovalPolicy_DESTROY,
+	// 	PartitionKey: &awsdynamodb.Attribute{
+	// 		Name: jsii.String("name"),
+	// 		Type: awsdynamodb.AttributeType_STRING,
+	// 	},
+	// 	SortKey: &awsdynamodb.Attribute{
+	// 		Name: jsii.String("time"),
+	// 		Type: awsdynamodb.AttributeType_STRING,
+	// 	},
+	// 	PointInTimeRecovery: jsii.Bool(true),
+	// })
+
+	// DynamoDB table
+	storyTable := awsdynamodb.NewTable(stack, jsii.String("dynamodb-table"), &awsdynamodb.TableProps{
+		TableName:     jsii.String(storyDynamoDBTable),
 		BillingMode:   awsdynamodb.BillingMode_PAY_PER_REQUEST,
 		ReadCapacity:  jsii.Number(1),
 		WriteCapacity: jsii.Number(1),
 		RemovalPolicy: awscdk.RemovalPolicy_DESTROY,
 		PartitionKey: &awsdynamodb.Attribute{
-			Name: jsii.String("name"),
+			Name: jsii.String("id"),
 			Type: awsdynamodb.AttributeType_STRING,
 		},
 		SortKey: &awsdynamodb.Attribute{
 			Name: jsii.String("time"),
 			Type: awsdynamodb.AttributeType_STRING,
 		},
-		PointInTimeRecovery: jsii.Bool(true),
 	})
 
 	// Create role for lambda function.
@@ -95,14 +122,14 @@ func NewCdkGolangStack(scope constructs.Construct, id string, props *CdkGolangSt
 		Role:         lambdaRole,
 		LogRetention: awslogs.RetentionDays_ONE_WEEK,
 		Environment: &map[string]*string{
-			"DYNAMODB_TABLE": jsii.String(*stack.StackName() + "-" + config.DynamoDBTable),
+			"DYNAMODB_TABLE": jsii.String(storyDynamoDBTable),
 		},
 	})
 
 	// Create get-chat-records function.
 	getFunction := awslambda.NewFunction(stack, jsii.String("GetChatRecords"), &awslambda.FunctionProps{
-		FunctionName: jsii.String(*stack.StackName() + "-GetChatRecords"),
 		Runtime:      awslambda.Runtime_GO_1_X(),
+		FunctionName: jsii.String(*stack.StackName() + "-GetChatRecords"),
 		MemorySize:   jsii.Number(128),
 		Timeout:      awscdk.Duration_Seconds(jsii.Number(60)),
 		Code:         awslambda.AssetCode_FromAsset(jsii.String("functions/get-chat-records/."), nil),
@@ -111,8 +138,8 @@ func NewCdkGolangStack(scope constructs.Construct, id string, props *CdkGolangSt
 		Role:         lambdaRole,
 		LogRetention: awslogs.RetentionDays_ONE_WEEK,
 		Environment: &map[string]*string{
-			"DYNAMODB_TABLE": jsii.String(*stack.StackName() + "-" + config.DynamoDBTable),
-			"DYNAMODB_GSI":   jsii.String(config.DynamoDBGSI),
+			"DYNAMODB_TABLE": jsii.String(storyDynamoDBTable),
+			"DYNAMODB_GSI":   jsii.String(storyDynamoDBTable + "-SecondaryIndex"),
 		},
 		// ReservedConcurrentExecutions: jsii.Number(1),
 	})
@@ -182,24 +209,21 @@ func NewCdkGolangStack(scope constructs.Construct, id string, props *CdkGolangSt
 
 	// Create DynamoDB GSI table.
 	// Data Modeling
+
 	// chat_room(PK), time(SK),                  comment, name
 	// string         string(micro sec unixtime) string   string
-	chatTable.AddGlobalSecondaryIndex(&awsdynamodb.GlobalSecondaryIndexProps{
-		IndexName: jsii.String(config.DynamoDBGSI),
+	storyTable.AddGlobalSecondaryIndex(&awsdynamodb.GlobalSecondaryIndexProps{
+		IndexName: jsii.String(storyDynamoDBTable + "-SecondaryIndex"),
 		PartitionKey: &awsdynamodb.Attribute{
-			Name: jsii.String("chat_room"),
-			Type: awsdynamodb.AttributeType_STRING,
-		},
-		SortKey: &awsdynamodb.Attribute{
-			Name: jsii.String("time"),
+			Name: jsii.String("creator"),
 			Type: awsdynamodb.AttributeType_STRING,
 		},
 		ProjectionType: awsdynamodb.ProjectionType_ALL,
 	})
 
 	// Grant access to lambda functions.
-	chatTable.GrantWriteData(putFunction)
-	chatTable.GrantReadData(getFunction)
+	storyTable.GrantWriteData(putFunction)
+	storyTable.GrantReadData(getFunction)
 
 	return stack
 
