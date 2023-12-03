@@ -14,6 +14,7 @@ require (
 	github.com/Masterminds/semver/v3 v3.2.1 // indirect
 	github.com/aws/aws-cdk-go/awscdk v1.204.0-devpreview // indirect
 	github.com/aws/aws-cdk-go/awscdk/v2 v2.110.0 // indirect
+	github.com/aws/aws-lambda-go v1.41.0 // indirect
 	github.com/aws/aws-sdk-go-v2/service/dynamodbstreams v1.15.7 // indirect
 	github.com/aws/constructs-go/constructs v0.0.0-20210203051210-8754df3d2bfd // indirect
 	github.com/aws/constructs-go/constructs/v10 v10.3.0 // indirect
