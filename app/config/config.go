@@ -53,6 +53,7 @@ Returns Configuration or error, if issues occur.
 func BuildConfiguration() (*Config, error) {
 	pgArgEnvironment := os.Args[1]
 	environmentPath := fmt.Sprintf(".env.%s", pgArgEnvironment)
+	fmt.Println("environment %s | .env file %s", pgArgEnvironment, environmentPath)
 
 	// Deny processing if environment argument isn't what we want
 	if (pgArgEnvironment == "development") || (pgArgEnvironment == "production") {
@@ -73,8 +74,8 @@ func BuildConfiguration() (*Config, error) {
 			AccessKeyID:     envs["AWS_ACCESS_KEY_ID"],
 			SecretAccessKey: envs["AWS_SECRET_ACCESS_KEY"],
 			SessionToken:    "dummy",
-			Region:       envs["AWS_REGION"],
-			AccountID:    envs["AWS_ACCOUNT_ID"],
+			Region:          envs["AWS_REGION"],
+			AccountID:       envs["AWS_ACCOUNT_ID"],
 		}
 		// TODO: Get configuration settings from .env file
 		dynamodbConfiguration := DynamodbConfiguration{

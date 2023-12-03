@@ -37,10 +37,10 @@ Log information to redis database.
 
 Resource: How to Get All Keys in Redis - https://chartio.com/resources/tutorials/how-to-get-all-keys-in-redis/
 */
-func Event(details ...any) {
+func Event(d ...any) {
 	var err error
 	name := "logging"
-	s := fmt.Sprint(details...)
+	s := fmt.Sprint(d...)
 
 	// Connect to Redis
 	singleton, err := database.GetRedisClientSingleton()
@@ -66,7 +66,7 @@ func Event(details ...any) {
 		// 	return errors.New("Redis Client singleton is undefined")
 		// }
 
-		value := fmt.Sprintf("%v, %v", t.String(), details)
+		value := fmt.Sprintf("%v, %v", t.String(), d)
 		err = singleton.Set(context, key, value, time.Hour).Err()
 		if err != nil {
 			logRedisSingletonSetError(err)

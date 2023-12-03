@@ -30,8 +30,13 @@ import (
 // resource - https://itnext.io/learn-how-to-use-dynamodb-streams-with-aws-lambda-and-go-f7abcee4d987
 // resource - https://docs.aws.amazon.com/apigateway/latest/developerguide/http-api-dynamo-db.html#http-api-dynamo-db-create-table
 // resource - https://pkg.go.dev/github.com/aws/aws-cdk-go/awscdk/awsapigateway#section-readme
-
-
+// (!) resource - https://docs.aws.amazon.com/lambda/latest/dg/golang-handler.html
+// (!) resource - https://github.com/aws/aws-sdk-go
+// (!) resource - https://aws.github.io/aws-sdk-go-v2/docs/getting-started/
+// (!) resource - https://docs.aws.amazon.com/cdk/v2/guide/work-with-cdk-go.html
+// (!) resource - https://github.com/aws/aws-cdk-go
+// (!) resource - https://github.com/aws-samples/hello-go-cdk
+// (!!) resource - https://aws.amazon.com/blogs/developer/getting-started-with-the-aws-cloud-development-kit-and-go/
 
 type CdkGolangStackProps struct {
 	awscdk.StackProps
@@ -85,10 +90,10 @@ func NewCdkGolangStack(scope constructs.Construct, id string, props *CdkGolangSt
 
 	// DynamoDB table
 	storyTable := awsdynamodb.NewTable(stack, jsii.String("dynamodb-table"), &awsdynamodb.TableProps{
-		TableName:     jsii.String(storyDynamoDBTable),
-		BillingMode:   awsdynamodb.BillingMode_PAY_PER_REQUEST,
-		ReadCapacity:  jsii.Number(1),
-		WriteCapacity: jsii.Number(1),
+		TableName:   jsii.String(storyDynamoDBTable),
+		BillingMode: awsdynamodb.BillingMode_PAY_PER_REQUEST,
+		// ReadCapacity:  jsii.Number(1),
+		// WriteCapacity: jsii.Number(1),
 		RemovalPolicy: awscdk.RemovalPolicy_DESTROY,
 		PartitionKey: &awsdynamodb.Attribute{
 			Name: jsii.String("id"),
@@ -116,7 +121,7 @@ func NewCdkGolangStack(scope constructs.Construct, id string, props *CdkGolangSt
 		Runtime:      awslambda.Runtime_GO_1_X(),
 		MemorySize:   jsii.Number(128),
 		Timeout:      awscdk.Duration_Seconds(jsii.Number(60)),
-		Code:         awslambda.AssetCode_FromAsset(jsii.String("../functions/put-chat-records/."), nil),
+		Code:         awslambda.AssetCode_FromAsset(jsii.String("functions/put-chat-records/"), nil),
 		Handler:      jsii.String("put-chat-records"),
 		Architecture: awslambda.Architecture_X86_64(),
 		Role:         lambdaRole,
@@ -132,7 +137,7 @@ func NewCdkGolangStack(scope constructs.Construct, id string, props *CdkGolangSt
 		FunctionName: jsii.String(*stack.StackName() + "-GetChatRecords"),
 		MemorySize:   jsii.Number(128),
 		Timeout:      awscdk.Duration_Seconds(jsii.Number(60)),
-		Code:         awslambda.AssetCode_FromAsset(jsii.String("../functions/get-chat-records/."), nil),
+		Code:         awslambda.AssetCode_FromAsset(jsii.String("functions/get-chat-records/"), nil),
 		Handler:      jsii.String("get-chat-records"),
 		Architecture: awslambda.Architecture_X86_64(),
 		Role:         lambdaRole,

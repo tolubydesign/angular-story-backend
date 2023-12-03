@@ -4,7 +4,7 @@ import (
 	"time"
 
 	"github.com/golang-jwt/jwt/v5"
-	"github.com/tolubydesign/angular-story-backend/app/config"
+	config "github.com/tolubydesign/angular-story-backend/app/config"
 	"github.com/tolubydesign/angular-story-backend/app/models"
 )
 

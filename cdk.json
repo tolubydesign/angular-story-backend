@@ -1,5 +1,5 @@
 {
-  "app": "go mod download && go run main.go --signal SIGTERM -- production",
+  "app": "go mod download && go run main.go production",
   "watch": {
     "include": [
       "**"
