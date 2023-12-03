@@ -15,7 +15,7 @@ import (
 func main() {
 	// Setup project configuration
 	config, err := configuration.BuildConfiguration()
-	logging.Event("ENVIRONMENT %v", config.Configuration.Environment)
+	logging.Event("ENVIRONMENT %s", config.Configuration.Environment)
 
 	if err != nil {
 		logging.Error(err.Error())

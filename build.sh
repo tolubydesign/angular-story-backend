@@ -1,2 +1,2 @@
 #!/bin/bash
-go build -o main main.go --signal SIGTERM -- production
+go build production

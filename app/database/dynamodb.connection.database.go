@@ -11,7 +11,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/credentials"
 	"github.com/aws/aws-sdk-go-v2/service/dynamodb"
 	"github.com/aws/aws-sdk-go-v2/service/dynamodb/types"
-	envConfiguration "github.com/tolubydesign/angular-story-backend/app/config"
+	envConfig "github.com/tolubydesign/angular-story-backend/app/config"
 	"github.com/tolubydesign/angular-story-backend/app/helpers"
 	"github.com/tolubydesign/angular-story-backend/app/mutation"
 	"github.com/tolubydesign/angular-story-backend/app/query"
@@ -23,7 +23,7 @@ var dynamoSingleton *dynamodb.Client
 Connecting to dynamo db through terminal https://docs.aws.amazon.com/amazondynamodb/latest/developerguide/DynamoDBLocal.UsageNotes.html
 */
 func CreateDynamoClient() (*dynamodb.Client, error) {
-	configuration, err := envConfiguration.GetConfiguration()
+	configuration, err := envConfig.GetConfiguration()
 	if err != nil {
 		return nil, err
 	}
@@ -125,7 +125,7 @@ Check that the required Story table exists in the database.
 */
 func StoryTableExists(client *dynamodb.Client) (bool, error) {
 	var exists = false
-	configuration, err := envConfiguration.GetConfiguration()
+	configuration, err := envConfig.GetConfiguration()
 	name := configuration.Configuration.Dynamodb.StoryTableName
 	table := query.TableBasics{
 		DynamoDbClient: client,
@@ -155,7 +155,7 @@ func StoryTableExists(client *dynamodb.Client) (bool, error) {
 // Check that User Dynamo db Table exists.
 func UserTableExists(client *dynamodb.Client) (bool, error) {
 	var exists = false
-	configuration, err := envConfiguration.GetConfiguration()
+	configuration, err := envConfig.GetConfiguration()
 	name := configuration.Configuration.Dynamodb.UserTableName
 	if err != nil {
 		return exists, err
@@ -195,7 +195,7 @@ Critical research
 */
 func SetupStoryDatabase(client *dynamodb.Client) error {
 	var err error
-	configuration, err := envConfiguration.GetConfiguration()
+	configuration, err := envConfig.GetConfiguration()
 	if client == nil {
 		return errors.New("Database is unreachable")
 	}
@@ -245,7 +245,7 @@ func SetupStoryDatabase(client *dynamodb.Client) error {
 // Create User table structure, in Dynamo database.
 func SetupUserData(client *dynamodb.Client) error {
 	var err error
-	configuration, err := envConfiguration.GetConfiguration()
+	configuration, err := envConfig.GetConfiguration()
 	if client == nil {
 		return errors.New("Database is unreachable")
 	}
