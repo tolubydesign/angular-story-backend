@@ -8,6 +8,7 @@ import (
 	"github.com/gofiber/fiber/v2"
 	configuration "github.com/tolubydesign/angular-story-backend/app/config"
 	"github.com/tolubydesign/angular-story-backend/app/controller"
+	"github.com/tolubydesign/angular-story-backend/app/helpers"
 	"github.com/tolubydesign/angular-story-backend/app/logging"
 	"github.com/tolubydesign/angular-story-backend/cdk"
 )
@@ -15,19 +16,17 @@ import (
 func main() {
 	// Setup project configuration
 	config, err := configuration.BuildConfiguration()
-	logging.Event("ENVIRONMENT %s", config.Configuration.Environment)
+	logging.Event("ENVIRONMENT ", config.Configuration.Environment)
 
 	if err != nil {
 		logging.Error(err.Error())
 		panic(err)
 	}
 
-	if config.Configuration.Environment == "development" {
-		APIDevelopment()
-	}
-
-	if config.Configuration.Environment == "production" {
+	if helpers.IsLambda() {
 		cdk.RunCDK()
+	} else {
+		APIDevelopment()
 	}
 }
 

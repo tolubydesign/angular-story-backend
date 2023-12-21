@@ -1,0 +1,210 @@
+# https://github.com/omeiirr/dummy-data-api/tree/main
+# https://docs.aws.amazon.com/serverless-application-model/latest/developerguide/what-is-sam.html
+# https://github.com/awslabs/aws-lambda-go-api-proxy/blob/master/fiber/adapter.go
+
+AWSTemplateFormatVersion: "2010-09-09"
+Transform: AWS::Serverless-2016-10-31
+Description: >
+  lambda-go-proxy-api-demo-app
+
+  SAM Template for lambda-go-proxy-api-demo-app
+
+Globals:
+  Function:
+    MemorySize: 128
+    # Architectures: ["x86_64"]
+    # Architectures: ["arm64"]
+    # Handler: demo
+    # Runtime: provided.al2 # go1.x
+    Timeout: 5
+    # Tracing: Active
+    # Environment:
+    #   Variables:
+    #     TABLE: !Ref Table
+
+Resources:
+  call:
+    Type: AWS::Serverless::Function
+    Properties:
+      Handler: functions/call/ # src/get-all-items.getAllItemsHandler
+      CodeUri: .
+      Runtime: go1.x
+      Architectures:
+        - x86_64
+      Policies:
+        - AWSLambdaBasicExecutionRole
+      Events:
+        ApiEvents:
+          Type: Api
+          Properties:
+            Path: /
+            Method: GET
+            RestApiId: !Ref DemoAPIGateway
+    Metadata:
+      BuildMethod: makefile
+
+# Outputs:
+#   APIGWEndpoint:
+#     Description: API Gateway Endpoint
+#     Value:
+#       Fn::Sub: https://${DemoAPIGateway}.execute-api.${AWS::Region}.amazonaws.com/dev/ping
+
+###############################
+
+# Resources:
+#   DemoFunction:
+#     Type: AWS::Serverless::Function
+#     Properties:
+#       CodeUri: functions/call/
+#       # Handler: demo
+#       # Runtime: go1.x
+#       # Architectures:
+#       #   - x86_64
+#       Events:
+#         Api:
+#           Type: HttpApi
+#           Properties:
+#             Path: /
+#             Method: GET
+#       Policies:
+#         # - AWSLambdaBasicExecutionRole
+#         - Version: "2012-10-17"
+#           Statement:
+#             - Effect: Allow
+#               Action: dynamodb:GetItem
+#               Resource: !GetAtt Table.Arn
+#     Metadata:
+#       BuildMethod: makefile
+
+###############################
+
+  # GetProductsFunction:
+  #   Type: AWS::Serverless::Function
+  #   Properties:
+  #     CodeUri: functions/get-products/
+  #     Events:
+  #       Api:
+  #         Type: HttpApi
+  #         Properties:
+  #           Path: /
+  #           Method: GET
+  #     Policies:
+  #       - Version: "2012-10-17"
+  #         Statement:
+  #           - Effect: Allow
+  #             Action: dynamodb:Scan
+  #             Resource: !GetAtt Table.Arn
+  #   Metadata:
+  #     BuildMethod: makefile
+
+  # GetProductFunction:
+  #   Type: AWS::Serverless::Function
+  #   Properties:
+  #     CodeUri: functions/get-product/
+  #     Events:
+  #       Api:
+  #         Type: HttpApi
+  #         Properties:
+  #           Path: /{id}
+  #           Method: GET
+  #     Policies:
+  #       - Version: "2012-10-17"
+  #         Statement:
+  #           - Effect: Allow
+  #             Action: dynamodb:GetItem
+  #             Resource: !GetAtt Table.Arn
+  #   Metadata:
+  #     BuildMethod: makefile
+
+  # DeleteProductFunction:
+  #   Type: AWS::Serverless::Function
+  #   Properties:
+  #     CodeUri: functions/delete-product/
+  #     Events:
+  #       Api:
+  #         Type: HttpApi
+  #         Properties:
+  #           Path: /{id}
+  #           Method: DELETE
+  #     Policies:
+  #       - Version: "2012-10-17"
+  #         Statement:
+  #           - Effect: Allow
+  #             Action: dynamodb:DeleteItem
+  #             Resource: !GetAtt Table.Arn
+  #   Metadata:
+  #     BuildMethod: makefile
+
+  # PutProductFunction:
+  #   Type: AWS::Serverless::Function
+  #   Properties:
+  #     CodeUri: functions/put-product/
+  #     Events:
+  #       Api:
+  #         Type: HttpApi
+  #         Properties:
+  #           Path: /{id}
+  #           Method: PUT
+  #     Policies:
+  #       - Version: "2012-10-17"
+  #         Statement:
+  #           - Effect: Allow
+  #             Action: dynamodb:PutItem
+  #             Resource: !GetAtt Table.Arn
+  #   Metadata:
+  #     BuildMethod: makefile
+
+  # DDBStreamsFunction:
+  #   Type: AWS::Serverless::Function
+  #   Properties:
+  #     CodeUri: functions/products-stream/
+  #     Timeout: 10
+  #     Events:
+  #       TableStream:
+  #         Type: DynamoDB
+  #         Properties:
+  #           BatchSize: 1000
+  #           FunctionResponseTypes:
+  #             - ReportBatchItemFailures
+  #           MaximumBatchingWindowInSeconds: 10
+  #           StartingPosition: TRIM_HORIZON
+  #           Stream: !GetAtt Table.StreamArn
+  #     Environment:
+  #       Variables:
+  #         EVENT_BUS_NAME: !Ref EventBus
+  #     MemorySize: 128
+  #     Policies:
+  #       - Version: "2012-10-17"
+  #         Statement:
+  #           - Effect: Allow
+  #             Action: events:PutEvents
+  #             Resource: !GetAtt EventBus.Arn
+
+  Table:
+    Type: AWS::DynamoDB::Table
+    Properties:
+      AttributeDefinitions:
+        - AttributeName: id
+          AttributeType: S
+      BillingMode: PAY_PER_REQUEST
+      KeySchema:
+        - AttributeName: id
+          KeyType: HASH
+      StreamSpecification:
+        StreamViewType: NEW_AND_OLD_IMAGES
+
+  # EventBus:
+  #   Type: AWS::Events::EventBus
+  #   Properties:
+  #     Name: !Ref AWS::StackName
+
+  DemoAPIGateway:
+    Type: AWS::Serverless::Api
+    Properties:
+      StageName: dev
+
+Outputs:
+  ApiUrl:
+    Description: "API Gateway endpoint URL"
+    Value: !Sub "https://${DemoAPIGateway}.execute-api.${AWS::Region}.amazonaws.com/"
+    # Value: !Sub "https://${ServerlessHttpApi}.execute-api.${AWS::Region}.amazonaws.com/"
