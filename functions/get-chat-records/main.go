@@ -8,8 +8,10 @@ import (
 	"net/http"
 	"os"
 
-	// "github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/config"
+	"github.com/aws/aws-sdk-go-v2/service/s3"
+
 	// "github.com/aws/aws-sdk-go-v2/feature/dynamodb/attributevalue"
 	// "github.com/aws/aws-sdk-go-v2/service/dynamodb"
 	// "github.com/aws/aws-sdk-go-v2/service/dynamodb/types"
@@ -25,24 +27,25 @@ type ChatInfo struct {
 }
 
 /*
-type APIGatewayProxyRequest struct {
-    Resource              string                        `json:"resource"` // The resource path defined in API Gateway
-    Path                  string                        `json:"path"`     // The url path for the caller
-    HTTPMethod            string                        `json:"httpMethod"`
-    Headers               map[string]string             `json:"headers"`
-    QueryStringParameters map[string]string             `json:"queryStringParameters"`
-    PathParameters        map[string]string             `json:"pathParameters"`
-    StageVariables        map[string]string             `json:"stageVariables"`
-    RequestContext        APIGatewayProxyRequestContext `json:"requestContext"`
-    Body                  string                        `json:"body"`
-    IsBase64Encoded       bool                          `json:"isBase64Encoded,omitempty"`
-}
-type APIGatewayProxyResponse struct {
-    StatusCode      int               `json:"statusCode"`
-    Headers         map[string]string `json:"headers"`
-    Body            string            `json:"body"`
-    IsBase64Encoded bool              `json:"isBase64Encoded,omitempty"`
-}
+	type APIGatewayProxyRequest struct {
+	    Resource              string                        `json:"resource"` // The resource path defined in API Gateway
+	    Path                  string                        `json:"path"`     // The url path for the caller
+	    HTTPMethod            string                        `json:"httpMethod"`
+	    Headers               map[string]string             `json:"headers"`
+	    QueryStringParameters map[string]string             `json:"queryStringParameters"`
+	    PathParameters        map[string]string             `json:"pathParameters"`
+	    StageVariables        map[string]string             `json:"stageVariables"`
+	    RequestContext        APIGatewayProxyRequestContext `json:"requestContext"`
+	    Body                  string                        `json:"body"`
+	    IsBase64Encoded       bool                          `json:"isBase64Encoded,omitempty"`
+	}
+
+	type APIGatewayProxyResponse struct {
+	    StatusCode      int               `json:"statusCode"`
+	    Headers         map[string]string `json:"headers"`
+	    Body            string            `json:"body"`
+	    IsBase64Encoded bool              `json:"isBase64Encoded,omitempty"`
+	}
 */
 func handleRequest(ctx context.Context, request events.APIGatewayProxyRequest) (events.APIGatewayProxyResponse, error) {
 	fmt.Printf("QueryStringParameters: %+v", request.QueryStringParameters)
@@ -51,18 +54,40 @@ func handleRequest(ctx context.Context, request events.APIGatewayProxyRequest) (
 	log.Printf("DYNAMODB_TABLE: %s.\n", os.Getenv("DYNAMODB_TABLE"))
 	log.Printf("DYNAMODB_GSI: %s.\n", os.Getenv("DYNAMODB_GSI"))
 
+	// Load the Shared AWS Configuration (~/.aws/config)
+	cfg, err := config.LoadDefaultConfig(context.TODO(), config.WithRegion(os.Getenv("AWS_REGION")))
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	// Create an Amazon S3 service client
+	client := s3.NewFromConfig(cfg)
+
+	// Get the first page of results for ListObjectsV2 for a bucket
+	output, err := client.ListObjectsV2(context.TODO(), &s3.ListObjectsV2Input{
+		Bucket: aws.String("my-bucket"),
+	})
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	log.Println("first page results:")
+	for _, object := range output.Contents {
+		log.Printf("key=%s size=%d", aws.ToString(object.Key), object.Size)
+	}
+
 	// chatroom := request.QueryStringParameters["chatroom"]
 	// if len(chatroom) == 0 {
 	// 	return clientError(http.StatusBadRequest)
 	// }
 
 	// Load AWS configuration.
-	cfg, err := config.LoadDefaultConfig(context.TODO(), config.WithRegion(os.Getenv("AWS_REGION")))
-	if err != nil {
-		return serverError(err)
-	}
+	// cfg, err := config.LoadDefaultConfig(context.TODO(), config.WithRegion(os.Getenv("AWS_REGION")))
+	// if err != nil {
+	// 	return serverError(err)
+	// }
 
-	log.Printf("CONFIGURATION: %v.\n", cfg)
+	// log.Printf("CONFIGURATION: %v.\n", cfg)
 	// Query chat records from DDB GSI.
 	// ddb := dynamodb.NewFromConfig(cfg)
 	// queryResult, err := ddb.Query(ctx, &dynamodb.QueryInput{
