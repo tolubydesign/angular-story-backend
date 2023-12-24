@@ -1,4 +1,4 @@
-package cdk
+package main
 
 import (
 	configuration "github.com/tolubydesign/angular-story-backend/app/config"
@@ -17,27 +17,6 @@ import (
 	// "apigtw-lambda-ddb/config"
 )
 
-// resource - https://harshq.medium.com/building-apps-with-aws-sdk-for-golang-api-gateway-and-lambda-b254858b1d71
-// 					-- https://gist.github.com/harshq/3c821984a96782d5aea329f132a384cb#file-test-api-go
-// resource - https://docs.aws.amazon.com/apigateway/latest/developerguide/http-api-dynamo-db.html#http-api-dynamo-db-create-table
-// resource - https://pkg.go.dev/github.com/aws/aws-cdk-go/awscdk/awsapigateway#section-readme
-// resource - https://pkg.go.dev/github.com/aws/aws-cdk-go/awscdk/awsdynamodb
-// (!) resource - https://github.com/aws-samples/serverless-patterns/tree/main/apigw-lambda-dynamodb-cdk-go
-// resource - https://serverlessland.com/patterns/apigw-lambda-dynamodb-cdk-go
-// (!) resource - https://github.com/cowcoa/aws-cdk-go-examples/blob/master/serverless/apigateway_lambda_ddb/cdk_main.go
-// (!) resource - https://github.com/cowcoa/aws-cdk-go-examples/tree/master/serverless/apigateway_lambda_ddb
-// (!) resource - https://github.com/abhirockzz/dynamodb-streams-lambda-golang
-// resource - https://itnext.io/learn-how-to-use-dynamodb-streams-with-aws-lambda-and-go-f7abcee4d987
-// resource - https://docs.aws.amazon.com/apigateway/latest/developerguide/http-api-dynamo-db.html#http-api-dynamo-db-create-table
-// resource - https://pkg.go.dev/github.com/aws/aws-cdk-go/awscdk/awsapigateway#section-readme
-// (!) resource - https://docs.aws.amazon.com/lambda/latest/dg/golang-handler.html
-// (!) resource - https://github.com/aws/aws-sdk-go
-// (!) resource - https://aws.github.io/aws-sdk-go-v2/docs/getting-started/
-// (!) resource - https://docs.aws.amazon.com/cdk/v2/guide/work-with-cdk-go.html
-// (!) resource - https://github.com/aws/aws-cdk-go
-// (!) resource - https://github.com/aws-samples/hello-go-cdk
-// (!!) resource - https://aws.amazon.com/blogs/developer/getting-started-with-the-aws-cloud-development-kit-and-go/
-
 type CdkGolangStackProps struct {
 	awscdk.StackProps
 }
@@ -49,6 +28,7 @@ func NewCdkGolangStack(scope constructs.Construct, id string, props *CdkGolangSt
 	var sprops awscdk.StackProps
 
 	c, err := configuration.GetConfiguration()
+	// storyDynamoDBTable := "Story"
 	storyDynamoDBTable := c.Configuration.Dynamodb.StoryTableName
 	// userDynamoDBTable := c.Configuration.Dynamodb.UserTableName
 	if err != nil {
@@ -115,7 +95,27 @@ func NewCdkGolangStack(scope constructs.Construct, id string, props *CdkGolangSt
 		},
 	})
 
+	// Create basic call function.
+	//
+	callFunction := awslambda.NewFunction(stack, jsii.String("CallFunction"), &awslambda.FunctionProps{
+		Runtime:      awslambda.Runtime_GO_1_X(),
+		FunctionName: jsii.String("serverless-go-" + *stack.StackName()),
+		MemorySize:   jsii.Number(128),
+		Timeout:      awscdk.Duration_Seconds(jsii.Number(60)),
+		Code:         awslambda.AssetCode_FromAsset(jsii.String("functions/call/"), nil),
+		Handler:      jsii.String("get-chat-records"),
+		Architecture: awslambda.Architecture_X86_64(),
+		Role:         lambdaRole,
+		LogRetention: awslogs.RetentionDays_ONE_WEEK,
+		Environment: &map[string]*string{
+			"DYNAMODB_TABLE": jsii.String(storyDynamoDBTable),
+			"DYNAMODB_GSI":   jsii.String(storyDynamoDBTable + "-SecondaryIndex"),
+		},
+		// ReservedConcurrentExecutions: jsii.Number(1),
+	})
+
 	// Create put-chat-records function.
+	//
 	putFunction := awslambda.NewFunction(stack, jsii.String("PutFunction"), &awslambda.FunctionProps{
 		FunctionName: jsii.String(*stack.StackName() + "-PutChatRecords"),
 		Runtime:      awslambda.Runtime_GO_1_X(),
@@ -132,6 +132,7 @@ func NewCdkGolangStack(scope constructs.Construct, id string, props *CdkGolangSt
 	})
 
 	// Create get-chat-records function.
+	//
 	getFunction := awslambda.NewFunction(stack, jsii.String("GetChatRecords"), &awslambda.FunctionProps{
 		Runtime:      awslambda.Runtime_GO_1_X(),
 		FunctionName: jsii.String(*stack.StackName() + "-GetChatRecords"),
@@ -175,6 +176,10 @@ func NewCdkGolangStack(scope constructs.Construct, id string, props *CdkGolangSt
 	})
 	getRecordsRes := restApi.Root().AddResource(jsii.String("get-chat-records"), nil)
 	getMethod := getRecordsRes.AddMethod(jsii.String("GET"), awsapigateway.NewLambdaIntegration(getFunction, nil), &awsapigateway.MethodOptions{
+		ApiKeyRequired: jsii.Bool(true),
+	})
+	callRecordsRes := restApi.Root().AddResource(jsii.String("call"), nil)
+	callRecordsRes.AddMethod(jsii.String("GET"), awsapigateway.NewLambdaIntegration(callFunction, nil), &awsapigateway.MethodOptions{
 		ApiKeyRequired: jsii.Bool(true),
 	})
 
@@ -229,6 +234,7 @@ func NewCdkGolangStack(scope constructs.Construct, id string, props *CdkGolangSt
 	// Grant access to lambda functions.
 	storyTable.GrantWriteData(putFunction)
 	storyTable.GrantReadData(getFunction)
+	storyTable.GrantReadData(callFunction)
 
 	return stack
 
@@ -283,7 +289,7 @@ func env() *awscdk.Environment {
 	// }
 }
 
-func RunCDK() {
+func main() {
 	defer jsii.Close()
 
 	app := awscdk.NewApp(nil)

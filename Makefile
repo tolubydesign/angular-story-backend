@@ -1,7 +1,7 @@
 STACK_NAME ?= serverless-go-demo
 FUNCTIONS := call
 # FUNCTIONS := get-products get-product put-product delete-product products-stream call
-REGION := us-east-1
+REGION := us-east-2
 
 # To try different version of Go
 GO := go
@@ -18,9 +18,10 @@ build:
 	${MAKE} ${MAKEOPTS} $(foreach function,${FUNCTIONS}, build-${function})
 
 build-%:
-	GOOS=linux CGO_ENABLED=0 ${GO} build -o bootstrap ./functions/$*
-	cp ./bootstrap $(ARTIFACTS_DIR)/.
-	rm ./bootstrap
+	GOOS=linux GOARCH=amd64 CGO_ENABLED=0 ${GO} build -o main ./functions/$*
+	cp ./main $(ARTIFACTS_DIR)/.
+	rm ./main
+# GOOS=linux GOARCH=amd64 CGO_ENABLED=0 go build -o main main.go
 # cd functions/$* && GOOS=linux GOARCH=arm64 CGO_ENABLED=0 ${GO} build -o bootstrap ./
 # go build -o api ./functions/call
 # cd functions/$* && GOOS=linux GOARCH=arm64 CGO_ENABLED=0 ${GO} build -o bootstrap
@@ -29,7 +30,7 @@ build-gcc:
 	${MAKE} ${MAKEOPTS} $(foreach function,${FUNCTIONS}, build-gcc-${function})
 
 build-gcc-%:
-	cd functions/$* && GOOS=linux GOARCH=arm64 CGO_ENABLED=1 CC=${CC} ${GO} build -o bootstrap
+	cd functions/$* && GOOS=linux GOARCH=arm64 CGO_ENABLED=1 CC=${CC} ${GO} build -o main
 
 build-gcc-optimized:
 	${MAKE} ${MAKEOPTS} $(foreach function,${FUNCTIONS}, build-gcc-optimized-${function})
@@ -56,9 +57,10 @@ clean:
 	@rm $(foreach function,${FUNCTIONS}, functions/${function}/bootstrap)
 
 deploy:
+# sam deploy --guided (-g means --guided)
 	if [ -f samconfig.toml ]; \
-		then sam deploy --stack-name ${STACK_NAME}; \
-		else sam deploy -g --stack-name ${STACK_NAME}; \
+		then sam deploy --stack-name ${STACK_NAME} --region ${REGION}; \
+		else sam deploy -g --stack-name ${STACK_NAME} --region ${REGION}; \
   fi
 
 tests-unit:

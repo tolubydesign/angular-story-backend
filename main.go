@@ -10,7 +10,7 @@ import (
 	"github.com/tolubydesign/angular-story-backend/app/controller"
 	"github.com/tolubydesign/angular-story-backend/app/helpers"
 	"github.com/tolubydesign/angular-story-backend/app/logging"
-	"github.com/tolubydesign/angular-story-backend/cdk"
+	// "github.com/tolubydesign/angular-story-backend/cdk"
 )
 
 func main() {
@@ -24,7 +24,7 @@ func main() {
 	}
 
 	if helpers.IsLambda() {
-		cdk.RunCDK()
+		// cdk.RunCDK()
 	} else {
 		APIDevelopment()
 	}
