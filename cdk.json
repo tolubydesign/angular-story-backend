@@ -1,5 +1,5 @@
 {
-  "app": "go mod download && GOOS=linux GOARCH=amd64 go run main.go production",
+  "app": "go mod download && GOOS=linux GOARCH=amd64 go run cdk/cdk-golang.go ",
   "watch": {
     "include": [
       "**"

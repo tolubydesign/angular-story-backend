@@ -1,18 +1,14 @@
-# https://github.com/omeiirr/dummy-data-api/tree/main
-# https://docs.aws.amazon.com/serverless-application-model/latest/developerguide/what-is-sam.html
-# https://github.com/awslabs/aws-lambda-go-api-proxy/blob/master/fiber/adapter.go
-
 AWSTemplateFormatVersion: "2010-09-09"
 Transform: AWS::Serverless-2016-10-31
 Description: >
-  lambda-go-proxy-api-demo-app
+  serverless-go-demo
 
-  SAM Template for lambda-go-proxy-api-demo-app
+  SAM Template for serverless-go-demo
 
 Globals:
   Function:
     MemorySize: 128
-    # Architectures: ["x86_64"]
+    Architectures: ["x86_64"]
     # Architectures: ["arm64"]
     # Handler: demo
     # Runtime: provided.al2 # go1.x
@@ -21,16 +17,17 @@ Globals:
     # Environment:
     #   Variables:
     #     TABLE: !Ref Table
+    Runtime: go1.x
 
 Resources:
   call:
     Type: AWS::Serverless::Function
     Properties:
-      Handler: functions/call/ # src/get-all-items.getAllItemsHandler
+      FunctionName: "main"
+      Handler: main # src/get-all-items.getAllItemsHandler
       CodeUri: .
-      Runtime: go1.x
-      Architectures:
-        - x86_64
+      # Architectures:
+      #   - x86_64
       Policies:
         - AWSLambdaBasicExecutionRole
       Events:

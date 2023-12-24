@@ -53,7 +53,7 @@ Returns Configuration or error, if issues occur.
 func BuildConfiguration() (*Config, error) {
 	pgArgEnvironment := os.Args[1]
 	environmentPath := fmt.Sprintf(".env.%s", pgArgEnvironment)
-	fmt.Println("environment %s | .env file %s", pgArgEnvironment, environmentPath)
+	fmt.Println("environment: ", pgArgEnvironment, " | .env file: ", environmentPath)
 
 	// Deny processing if environment argument isn't what we want
 	if (pgArgEnvironment == "development") || (pgArgEnvironment == "production") {
@@ -112,7 +112,13 @@ func BuildConfiguration() (*Config, error) {
 
 func GetConfiguration() (*Config, error) {
 	if configurationSingleton == nil {
-		return nil, errors.New("Project Configuration is undefined")
+		// Build configuration
+		build, e := BuildConfiguration()
+		if e != nil {
+			return nil, errors.New("Project Configuration is undefined")
+		}
+
+		return build, nil
 	}
 
 	return configurationSingleton, nil

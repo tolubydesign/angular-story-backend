@@ -4,7 +4,7 @@ version = 0.1
 
 [default]
 [default.global.parameters]
-stack_name = "lambda-go-proxy-api-demo-app"
+stack_name = "serverless-go-demo"
 
 [default.build.parameters]
 cached = false
