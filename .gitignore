@@ -55,3 +55,6 @@ angular-story-backend
 
 # Hide any file base on how the filename starts
 false.*
+
+# AWS SAM
+/.aws-sam
