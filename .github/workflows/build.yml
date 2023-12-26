@@ -5,7 +5,8 @@ name: Build Go Project
 
 on:
   pull_request:
-    branches: [ "main", "development" ]
+    branches: [ "unknown" ]
+    # branches: [ "main", "development" ]
 
 jobs:
   build:
