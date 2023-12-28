@@ -11,6 +11,7 @@ import (
 	"github.com/tolubydesign/angular-story-backend/app/config"
 	database "github.com/tolubydesign/angular-story-backend/app/database"
 	helpers "github.com/tolubydesign/angular-story-backend/app/helpers"
+	"github.com/tolubydesign/angular-story-backend/app/logging"
 	models "github.com/tolubydesign/angular-story-backend/app/models"
 	mutation "github.com/tolubydesign/angular-story-backend/app/mutation"
 	query "github.com/tolubydesign/angular-story-backend/app/query"
@@ -343,4 +344,48 @@ func UserSignUpRequest(c *fiber.Ctx, client *dynamodb.Client) error {
 		Code:    fiber.StatusOK,
 		Message: "User Signed Up successful",
 	})
+}
+
+func HealthCheck(ctx *fiber.Ctx, client *dynamodb.Client) error {
+	var response models.HTTPResponse
+	if client == nil {
+		return errors.New(helpers.DynamodbResponseMessages.NilClient)
+	}
+
+	logging.Event("Performing health check on dynamodb.")
+	configuration, err := config.GetConfiguration()
+	if err != nil {
+		return fiber.NewError(fiber.StatusInternalServerError, err.Error())
+	}
+
+	tableName := configuration.Configuration.Dynamodb.StoryTableName
+	table := query.TableBasics{
+		DynamoDbClient: client,
+		TableName:      tableName,
+	}
+
+	tables, err := table.ListDynamodbTables()
+	if err != nil {
+		return fiber.NewError(fiber.StatusInternalServerError, err.Error())
+	}
+
+	response = models.HTTPResponse{
+		Code:    fiber.StatusOK,
+		Message: "Dynamo Database table unreachable.",
+	}
+
+	// Check for story table in array of table names
+	for _, a := range tables {
+		if a == tableName {
+			response = models.HTTPResponse{
+				Code:    fiber.StatusOK,
+				Message: "DynamoDB is active.",
+			}
+		}
+	}
+
+	logging.Event("Performing health check on dynamodb completed.")
+	ctx.Response().StatusCode()
+	ctx.Response().Header.Add("Content-Type", "application/json")
+	return ctx.JSON(response)
 }

@@ -1,6 +1,8 @@
 package controller
 
 import (
+	"fmt"
+
 	"github.com/gofiber/fiber/v2"
 	"github.com/gofiber/fiber/v2/middleware/cors"
 
@@ -42,7 +44,8 @@ func SetupDynamoDBMethods(app *fiber.App) {
 	// Get Dynamodb Client
 	client, err := dynamodb.ConnectDynamoDB()
 	if err != nil {
-		panic(err)
+		message := fmt.Sprintf("Failed to connect with dynamodb database: %s", err.Error())
+		panic(message)
 	}
 
 	// Data
@@ -86,5 +89,10 @@ func SetupDynamoDBMethods(app *fiber.App) {
 
 	app.Post("/sign-up", func(c *fiber.Ctx) error {
 		return dynamodb.UserSignUpRequest(c, client)
+	})
+
+	// Health check
+	app.Get("/health", func(ctx *fiber.Ctx) error {
+		return dynamodb.HealthCheck(ctx, client)
 	})
 }

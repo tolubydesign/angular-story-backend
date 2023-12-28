@@ -29,16 +29,10 @@ Resources:
     Type: AWS::Serverless::Function
     Properties:
       FunctionName: "main"
-      Handler: main # src/get-all-items.getAllItemsHandler
+      Handler: main
       CodeUri: .
-      # Architectures:
-      #   - x86_64
       Policies:
         - AWSLambdaBasicExecutionRole
-      # TimeoutInMillis: 15000
-      # PayloadFormatVersion: "2.0"
-      # RouteSettings:
-      #   ThrottlingBurstLimit: 600
       Events:
         ExplicitApi: # warning: creates a public endpoint
           Type: HttpApi
@@ -50,12 +44,6 @@ Resources:
             PayloadFormatVersion: "2.0"
             RouteSettings:
               ThrottlingBurstLimit: 600
-        # ApiEvents:
-        #   Type: HttpApi
-        #   Properties:
-        #     Path: /
-        #     Method: GET
-        #     RestApiId: !Ref DemoAPIGateway
     Metadata:
       BuildMethod: makefile
 
@@ -118,7 +106,6 @@ Outputs:
   #   Description: "API Gateway endpoint URL"
   #   Value: !Sub "https://${DemoAPIGateway}.execute-api.${AWS::Region}.amazonaws.com/"
   #   # Value: !Sub "https://${ServerlessHttpApi}.execute-api.${AWS::Region}.amazonaws.com/"
-
 
 # Outputs:
 #   APIGWEndpoint:

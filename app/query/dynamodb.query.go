@@ -15,14 +15,6 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/dynamodb/types"
 )
 
-// Code
-// https://github.com/awsdocs/aws-doc-sdk-examples/blob/main/gov2/dynamodb/actions/table_basics.go#L272
-// https://docs.aws.amazon.com/amazondynamodb/latest/developerguide/Scan.html
-// https://github.com/awsdocs/aws-doc-sdk-examples/blob/main/go/example_code/dynamodb/DynamoDBCreateItem.go
-// https://aws.github.io/aws-sdk-go-v2/docs/getting-started/
-// https://docs.aws.amazon.com/amazondynamodb/latest/developerguide/getting-started-step-5.html
-// https://davidagood.com/dynamodb-local-go/
-
 // setting type
 type TableBasics mutation.TableBasics
 
@@ -35,7 +27,7 @@ func (basics TableBasics) ListDynamodbTables() ([]string, error) {
 	)
 
 	if err != nil {
-		log.Printf("Couldn't list tables. Here's why: %v\n", err)
+		log.Printf("List Dynamo Database error: %v\n", err.Error())
 	} else {
 		tableNames = tables.TableNames
 	}
@@ -86,6 +78,9 @@ func (basics TableBasics) ScanByExpression(startYear int, endYear int) ([]models
 /*
 Scan the entire Story table.
 Return all items in table.
+
+Dynamodb Scan - (https://docs.aws.amazon.com/amazondynamodb/latest/developerguide/Scan.html)
+Dynamodb Scan - (https://github.com/awsdocs/aws-doc-sdk-examples/blob/main/gov2/dynamodb/actions/table_basics.go#L278C27-L278C31)
 */
 func (basics TableBasics) FullTableScan() ([]models.DynamoStoryResponseStruct, error) {
 	var stories []models.DynamoStoryResponseStruct

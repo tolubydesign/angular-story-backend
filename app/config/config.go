@@ -51,12 +51,12 @@ Build and return the environmental configuration.
 Returns Configuration or error, if issues occur.
 */
 func BuildConfiguration() (*Config, error) {
-	pgArgEnvironment := os.Args[1]
-	environmentPath := fmt.Sprintf(".env.%s", pgArgEnvironment)
-	fmt.Println("environment: ", pgArgEnvironment, " | .env file: ", environmentPath)
+	envArg := os.Args[1]
+	environmentPath := fmt.Sprintf(".env.%s", envArg)
+	fmt.Println("environment: ", envArg, " | .env file: ", environmentPath)
 
 	// Deny processing if environment argument isn't what we want
-	if (pgArgEnvironment == "development") || (pgArgEnvironment == "production") {
+	if (envArg == "development") || (envArg == "production") {
 		// Note: Alternative method of getting a .env file
 		// gottenEnv := os.Getenv("PORT")
 		// environment := os.Getenv("ENV")
@@ -77,6 +77,7 @@ func BuildConfiguration() (*Config, error) {
 			Region:          envs["AWS_REGION"],
 			AccountID:       envs["AWS_ACCOUNT_ID"],
 		}
+
 		// TODO: Get configuration settings from .env file
 		dynamodbConfiguration := DynamodbConfiguration{
 			StoryTableName: envs["DYNAMODB_STORY_TABLE_NAME"],
