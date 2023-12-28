@@ -8,25 +8,27 @@ import (
 	"github.com/gofiber/fiber/v2"
 	configuration "github.com/tolubydesign/angular-story-backend/app/config"
 	"github.com/tolubydesign/angular-story-backend/app/controller"
+	"github.com/tolubydesign/angular-story-backend/app/database"
 	"github.com/tolubydesign/angular-story-backend/app/helpers"
 	"github.com/tolubydesign/angular-story-backend/app/logging"
-	// "github.com/tolubydesign/angular-story-backend/cdk"
 )
 
 func main() {
 	// Setup project configuration
 	config, err := configuration.BuildConfiguration()
-	logging.Event("ENVIRONMENT ", config.Configuration.Environment)
-
 	if err != nil {
 		logging.Error(err.Error())
 		panic(err)
 	}
 
+	c := config.Configuration
+	logging.Event("ENVIRONMENT :::", c.Environment)
+
+	DevelopmentAPI()
 	if helpers.IsLambda() {
 		// cdk.RunCDK()
 	} else {
-		APIDevelopment()
+
 	}
 }
 
@@ -57,8 +59,9 @@ func SetupApplication() *fiber.App {
 	})
 }
 
-// TODO: description
-func APIDevelopment() {
+// Developing int development mode.
+// This function runs a local api, for testing purposes.
+func DevelopmentAPI() {
 	configuration, err := configuration.GetConfiguration()
 	if err != nil {
 		panic(err)
@@ -70,6 +73,21 @@ func APIDevelopment() {
 	app := SetupApplication()
 	controller.HandleCORS(app, env)
 	controller.SetupMethods(app)
+
+	// get client
+	client, err := database.GetDynamoSingleton()
+	if err != nil {
+		panic(err)
+	}
+
+	// Add dummy data if in development mode
+	if (env == "development") && (client != nil) {
+		// setup database with dummy data
+		err := database.AddDummyData(client)
+		if err != nil {
+			panic(err)
+		}
+	}
 
 	if environmentPort == "" {
 		environmentPort = "2100"

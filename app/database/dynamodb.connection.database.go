@@ -29,6 +29,9 @@ func CreateDynamoClient() (*dynamodb.Client, error) {
 	}
 
 	env := configuration.Configuration.Environment
+	accessKey := configuration.Configuration.AWS.AccessKeyID
+	securityKey := configuration.Configuration.AWS.SecretAccessKey
+	sessionToken := configuration.Configuration.AWS.SessionToken
 
 	var dynamoConfigEndpoint config.LoadOptionsFunc
 	var dynamoConfigCredentialProvider config.LoadOptionsFunc
@@ -45,10 +48,11 @@ func CreateDynamoClient() (*dynamodb.Client, error) {
 		)
 
 		dynamoConfigCredentialProvider = config.WithCredentialsProvider(credentials.StaticCredentialsProvider{
-			// TODO: use env configuration
 			Value: aws.Credentials{
-				AccessKeyID: "DUMMYIDEXAMPLE", SecretAccessKey: "DUMMYEXAMPLEKEY", SessionToken: "dummy",
-				Source: "Hard-coded credentials; values are irrelevant for local DynamoDB",
+				AccessKeyID:     accessKey,
+				SecretAccessKey: securityKey,
+				SessionToken:    sessionToken,
+				Source:          "Hard-coded credentials; values are irrelevant for local DynamoDB",
 			},
 		})
 	} else {
@@ -63,10 +67,10 @@ func CreateDynamoClient() (*dynamodb.Client, error) {
 
 		dynamoConfigCredentialProvider = config.WithCredentialsProvider(credentials.StaticCredentialsProvider{
 			Value: aws.Credentials{
-				AccessKeyID: configuration.Configuration.AWS.AccessKeyID,
+				AccessKeyID:     configuration.Configuration.AWS.AccessKeyID,
 				SecretAccessKey: configuration.Configuration.AWS.SecretAccessKey,
-				SessionToken: "dummy",
-				Source: "Hard-coded credentials; values are irrelevant for local DynamoDB",
+				SessionToken:    sessionToken,
+				Source:          "Hard-coded credentials; values are irrelevant for local DynamoDB",
 			},
 		})
 	}
@@ -83,32 +87,6 @@ func CreateDynamoClient() (*dynamodb.Client, error) {
 	}
 
 	dynamoSingleton = dynamodb.NewFromConfig(cfg)
-
-	// setup database with dummy data
-	if env == "development" {
-		// Check that story table is in dynamo db
-		tableFound, err := StoryTableExists(dynamoSingleton)
-		if err != nil {
-			return dynamoSingleton, err
-		}
-
-		if tableFound == false {
-			fmt.Println("Table 'Story' table was not found. Attempting to create a new Story table.")
-			SetupStoryDatabase(dynamoSingleton)
-		}
-
-		// Check that user table is in the dynamo db
-		userTableFound, err := UserTableExists(dynamoSingleton)
-		if err != nil {
-			return dynamoSingleton, err
-		}
-
-		if userTableFound == false {
-			log.Println("Table 'User' table was not found. Attempting to create a new User table.")
-			SetupUserData(dynamoSingleton)
-		}
-	}
-
 	return dynamoSingleton, nil
 }
 
@@ -120,47 +98,44 @@ func GetDynamoSingleton() (*dynamodb.Client, error) {
 	return dynamoSingleton, nil
 }
 
-/*
-Check that the required Story table exists in the database.
-*/
-func StoryTableExists(client *dynamodb.Client) (bool, error) {
-	var exists = false
+func AddDummyData(singleton *dynamodb.Client) error {
 	configuration, err := envConfig.GetConfiguration()
-	name := configuration.Configuration.Dynamodb.StoryTableName
-	table := query.TableBasics{
-		DynamoDbClient: client,
-		TableName:      name,
-	}
-
-	tables, err := table.ListDynamodbTables()
-
 	if err != nil {
-		return false, err
+		return err
 	}
 
-	// Check for story table in array of table names
-	for _, a := range tables {
-		if a == "Story" {
-			exists = true
-		}
+	// Check that story table is in dynamo db
+	storyTableName := configuration.Configuration.Dynamodb.StoryTableName
+	storyTableFound, err := TableExists(singleton, storyTableName)
+	if err != nil {
+		return err
 	}
 
-	if exists {
-		log.Println("'Story' dynamo table exists")
+	// Check that user table is in the dynamo db
+	userTableName := configuration.Configuration.Dynamodb.UserTableName
+	userTableFound, err := TableExists(singleton, userTableName)
+	if err != nil {
+		return err
 	}
 
-	return exists, err
+	if storyTableFound == false {
+		fmt.Println("Table '", storyTableName, "' table was not found. Attempting to create a new ", storyTableName, " table.")
+		err = SetupStoryDatabase(singleton)
+	}
+
+	if userTableFound == false {
+		log.Println("Table '", userTableName, "' table was not found. Attempting to create a new ", userTableName, " table.")
+		err = SetupUserData(singleton)
+	}
+
+	return err
 }
 
-// Check that User Dynamo db Table exists.
-func UserTableExists(client *dynamodb.Client) (bool, error) {
+/*
+Check that the 'name' table exists in the database.
+*/
+func TableExists(client *dynamodb.Client, name string) (bool, error) {
 	var exists = false
-	configuration, err := envConfig.GetConfiguration()
-	name := configuration.Configuration.Dynamodb.UserTableName
-	if err != nil {
-		return exists, err
-	}
-
 	table := query.TableBasics{
 		DynamoDbClient: client,
 		TableName:      name,
@@ -179,7 +154,7 @@ func UserTableExists(client *dynamodb.Client) (bool, error) {
 	}
 
 	if exists {
-		log.Println("'User' dynamo table exists")
+		log.Println("'", name, "' dynamo table exists")
 	}
 
 	return exists, err
