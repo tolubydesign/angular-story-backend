@@ -289,11 +289,27 @@ or
 ```
 ---
 
+## How To Deploy
+
+The project is hosted on AWS. 
+Things are deployed on aws lambda and aws dynamodb. AWS Lambda handles the function request, along side API Gateway. Dynamodb holds the database.
+
+#### Terminal Scripts
+
+```bash
+$ sam build
+$ make deploy
+```
+
+
 ## In Development
 - Improved Error Response
 - JWT token
 - User Profiles
 - User login method
+- Deploying to AWS
+- Document updates
+- Restrict access to api.
 
 ## Disclaimer
 This is an educational project. The source code is licensed under the MIT license.
