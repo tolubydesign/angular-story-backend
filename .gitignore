@@ -58,3 +58,6 @@ false.*
 
 # AWS SAM
 /.aws-sam
+env.json
+env.*.json
+samconfig.toml
