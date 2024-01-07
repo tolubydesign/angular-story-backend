@@ -44,8 +44,9 @@ func main() {
 
 	fmt.Printf("%s is %s. years old\n", os.Getenv("NAME"), os.Getenv("AGE"))
 
-	lambda.Start(HandleRequest)
-
+	fiberLambda = fiberadapter.New(app)
+	lambda.Start(Handler)
+	// lambda.Start(HandleRequest)
 	// if helpers.IsLambda() {
 	// 	fiberLambda = fiberadapter.New(app)
 	// 	lambda.Start(Handler)

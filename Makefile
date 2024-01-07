@@ -1,5 +1,5 @@
 STACK_NAME ?= serverless-go-demo
-FUNCTIONS := call
+FUNCTIONS := call authentication
 # FUNCTIONS := get-products get-product put-product delete-product products-stream call
 REGION := us-east-2
 
@@ -18,9 +18,9 @@ build:
 	${MAKE} ${MAKEOPTS} $(foreach function,${FUNCTIONS}, build-${function})
 
 build-%:
-	GOOS=linux GOARCH=amd64 CGO_ENABLED=0 ${GO} build -o main ./functions/$*
-	cp ./main $(ARTIFACTS_DIR)/.
-	rm ./main
+	GOOS=linux GOARCH=amd64 CGO_ENABLED=0 ${GO} build -o bootstrap ./functions/$*
+	cp ./bootstrap $(ARTIFACTS_DIR)/.
+	rm ./bootstrap
 # GOOS=linux GOARCH=amd64 CGO_ENABLED=0 go build -o main main.go
 # cd functions/$* && GOOS=linux GOARCH=arm64 CGO_ENABLED=0 ${GO} build -o bootstrap ./
 # go build -o api ./functions/call
@@ -37,6 +37,10 @@ build-gcc-optimized:
 
 build-gcc-optimized-%:
 	cd functions/$* && GOOS=linux GOARCH=arm64 GCCGO=${GCCGO} ${GO} build -compiler gccgo -gccgoflags '-static -Ofast -march=armv8.2-a+fp16+rcpc+dotprod+crypto -mtune=neoverse-n1 -moutline-atomics' -o bootstrap
+
+sam-local:
+# [useful] StackOverflow env variables - https://stackoverflow.com/questions/66579433/how-to-add-environment-variables-in-template-yaml-in-a-secured-way
+	sam local start-api --env-vars env.aws-sam.json
 
 invoke:
 # 	@sam local invoke --env-vars env-vars.json GetProductsFunction
@@ -56,11 +60,15 @@ invoke:
 clean:
 	@rm $(foreach function,${FUNCTIONS}, functions/${function}/bootstrap)
 
+delete-stack: 
+	sam delete --stack-name serverless-go-demo
+
 deploy:
+# https://levelup.gitconnected.com/dynamic-environments-with-aws-sam-ff6d511a2804
 # sam deploy --guided (-g means --guided)
 	if [ -f samconfig.toml ]; \
-		then sam deploy --stack-name ${STACK_NAME} --region ${REGION}; \
-		else sam deploy -g --stack-name ${STACK_NAME} --region ${REGION}; \
+		then sam deploy --stack-name ${STACK_NAME} --region ${REGION} --config-env deployment; \
+		else sam deploy -g --stack-name ${STACK_NAME} --region ${REGION} --config-env deployment --parameter-overrides Env="production"; \
   fi
 
 tests-unit:

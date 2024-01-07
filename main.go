@@ -9,7 +9,6 @@ import (
 	configuration "github.com/tolubydesign/angular-story-backend/app/config"
 	"github.com/tolubydesign/angular-story-backend/app/controller"
 	"github.com/tolubydesign/angular-story-backend/app/database"
-	"github.com/tolubydesign/angular-story-backend/app/helpers"
 	"github.com/tolubydesign/angular-story-backend/app/logging"
 )
 
@@ -25,11 +24,6 @@ func main() {
 	logging.Event("ENVIRONMENT :::", c.Environment)
 
 	DevelopmentAPI()
-	if helpers.IsLambda() {
-		// cdk.RunCDK()
-	} else {
-
-	}
 }
 
 // TODO: description
