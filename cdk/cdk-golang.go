@@ -1,4 +1,4 @@
-package main
+package cdk
 
 import (
 	configuration "github.com/tolubydesign/angular-story-backend/app/config"
@@ -237,23 +237,38 @@ func NewCdkGolangStack(scope constructs.Construct, id string, props *CdkGolangSt
 	storyTable.GrantReadData(callFunction)
 
 	return stack
+}
 
-	// var sprops awscdk.StackProps
-	// if props != nil {
-	// 	sprops = props.StackProps
-	// }
-	// stack := awscdk.NewStack(scope, &id, &sprops)
-	// The code that defines your stack goes here
-	// example resource
-	// queue := awssqs.NewQueue(stack, jsii.String("CdkGolangQueue"), &awssqs.QueueProps{
-	// 	VisibilityTimeout: awscdk.Duration_Seconds(jsii.Number(300)),
-	// })
-	// return stack
+func GolangCDKStack(scope constructs.Construct, id string, props *CdkGolangStackProps) awscdk.Stack {
+	var sprops awscdk.StackProps
+	stack := awscdk.NewStack(scope, &id, &sprops)
+	// Create role for lambda function.
+	lambdaRole := awsiam.NewRole(stack, jsii.String("LambdaRole"), &awsiam.RoleProps{
+		RoleName:  jsii.String(*stack.StackName() + "-lambda-role"),
+		AssumedBy: awsiam.NewServicePrincipal(jsii.String("lambda.amazonaws.com"), nil),
+		ManagedPolicies: &[]awsiam.IManagedPolicy{
+			awsiam.ManagedPolicy_FromAwsManagedPolicyName(jsii.String("AmazonDynamoDBFullAccess")),
+			awsiam.ManagedPolicy_FromAwsManagedPolicyName(jsii.String("CloudWatchFullAccess")),
+		},
+	})
+
+	// Lambda basic function
+	awslambda.NewFunction(stack, jsii.String("BasicFunction"), &awslambda.FunctionProps{
+		Runtime:      awslambda.Runtime_GO_1_X(),
+		FunctionName: jsii.String("cdk-serverless-go-" + *stack.StackName()),
+		MemorySize:   jsii.Number(128),
+		Code:         awslambda.AssetCode_FromAsset(jsii.String("functions/call/"), nil),
+		Handler:      jsii.String("main"),
+		Role:         lambdaRole,
+		// Architecture: awslambda.Architecture_X86_64(),
+	})
+
+	return stack
 }
 
 // env determines the AWS environment (account+region) in which our stack is to
 // be deployed. For more information see: https://docs.aws.amazon.com/cdk/latest/guide/environments.html
-func env() *awscdk.Environment {
+func Env() *awscdk.Environment {
 	c, err := configuration.GetConfiguration()
 	if err != nil {
 		panic(err)
@@ -266,10 +281,6 @@ func env() *awscdk.Environment {
 	// single synthesized template can be deployed anywhere.
 	//---------------------------------------------------------------------------
 	// return nil
-	return &awscdk.Environment{
-		Account: jsii.String(account),
-		Region:  jsii.String(region),
-	}
 
 	// Uncomment if you know exactly what account and region you want to deploy
 	// the stack to. This is the recommendation for production stacks.
@@ -287,16 +298,27 @@ func env() *awscdk.Environment {
 	//  Account: jsii.String(os.Getenv("CDK_DEFAULT_ACCOUNT")),
 	//  Region:  jsii.String(os.Getenv("CDK_DEFAULT_REGION")),
 	// }
+
+	return &awscdk.Environment{
+		Account: jsii.String(account),
+		Region:  jsii.String(region),
+	}
 }
 
-func main() {
+func Run() {
 	defer jsii.Close()
 
 	app := awscdk.NewApp(nil)
 
-	NewCdkGolangStack(app, "CdkGolangStack", &CdkGolangStackProps{
+	// NewCdkGolangStack(app, "CdkGolangStack", &CdkGolangStackProps{
+	// 	awscdk.StackProps{
+	// 		Env: env(),
+	// 	},
+	// })
+
+	GolangCDKStack(app, "GolangCDKStack", &CdkGolangStackProps{
 		awscdk.StackProps{
-			Env: env(),
+			Env: Env(),
 		},
 	})
 

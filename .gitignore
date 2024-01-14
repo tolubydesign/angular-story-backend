@@ -47,6 +47,10 @@
 # Dependency directories (remove the comment below to include it)
 # vendor/
 
+# CDK asset staging directory
+.cdk.staging
+cdk.out
+
 # Built project location
 /bin
 build

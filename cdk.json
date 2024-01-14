@@ -1,8 +1,9 @@
 {
-  "app": "go mod download && GOOS=linux GOARCH=amd64 go run cdk/cdk-golang.go ",
+  "app": "go mod download && GOOS=linux GOARCH=amd64 CGO_ENABLED=0 go run main.go production",
   "watch": {
     "include": [
-      "**"
+      "**",
+      ".env.production"
     ],
     "exclude": [
       "README.md",
