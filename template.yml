@@ -18,25 +18,37 @@ Globals:
   Function:
     MemorySize: 128
     Architectures: ["x86_64"]
-    # Architectures: ["arm64"]
-    # Handler: demo
-    # Runtime: provided.al2 # go1.x
     Timeout: 5
-    # Tracing: Active
-    # Environment:
-    #   Variables:
-    #     TABLE: !Ref Table
     Runtime: go1.x
 
 Resources:
-
   # Authentication Function
   authentication:
     Type: AWS::Serverless::Function
     Properties:
-      FunctionName: !Join ["", [{ "Ref": "AWS::StackName" }, "-authentication-function"]]
+      FunctionName:
+        !Join ["", [{ "Ref": "AWS::StackName" }, "-authentication-function"]]
       Handler: bootstrap
       CodeUri: .
+      AssumeRolePolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service: apigateway.amazonaws.com
+            Action: sts:AssumeRole
+          - Effect: Allow
+            Principal:
+              Service: lambda.amazonaws.com
+            Action: sts:AssumeRole
+      Policies:
+        - AWSLambdaBasicExecutionRole
+        - Version: "2012-10-17"
+          Statement:
+            - Effect: "Allow"
+              Action:
+                - "lambda:InvokeFunction"
+              Resource: "*"
       Environment:
         Variables:
           API_KEY: !Ref ApiKeyAuthValue
@@ -49,164 +61,78 @@ Resources:
     Properties:
       FunctionName: !Join ["", [{ "Ref": "AWS::StackName" }, "-call-function"]]
       Handler: bootstrap
-      # CodeUri: functions/call/
       CodeUri: .
       Policies:
         - AWSLambdaBasicExecutionRole
+        - CloudWatchPutMetricPolicy: {}
       Events:
         GetApiEvent:
           Type: Api
           Properties:
-            RestApiId:
-              Ref: ServerlessHttpApi
-            # ApiId: !Ref ServerlessHttpApi
+            RestApiId: !Ref ServerlessHttpApi
             Method: GET
             Path: /
-            # TimeoutInMillis: 15000
-            # PayloadFormatVersion: "2.0"
-            # RouteSettings:
-            #   ThrottlingBurstLimit: 100
-      # https://newsletter.simpleaws.dev/p/managing-multiple-lambda-functions
-      # Policies:
-      #   - Statement:
-      #       Effect: Allow
-      #       Action:
-      #         - dynamodb:GetItem
-      #         - dynamodb:PutItem
-      #         - dynamodb:Scan
-      #         - dynamodb:Query
-      #         - dynamodb:UpdateItem
-      #       Resource: !GetAtt Table.Arn
+            RequestParameters:
+              - method.request.header.Authorization
+            Auth:
+              ApiKeyRequired: false
     Metadata:
       BuildMethod: makefile
+  # Permission to allow Lambda invocation from API Gateway
+  callPermission:
+    Type: AWS::Lambda::Permission
+    Properties:
+      FunctionName: !Ref call
+      Action: lambda:InvokeFunction
+      Principal: apigateway.amazonaws.com
+      SourceArn: !Sub arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:${ServerlessHttpApi}/*/GET/
 
   # REST API
   ServerlessHttpApi:
     Type: AWS::Serverless::Api
     Properties:
       Name: !Join ["", [{ "Ref": "AWS::StackName" }, "-rest-api"]]
+      Description: API Gateway using Lambda Authorizer and Mapping Template to inject customer HTTP headers with additional data.
       StageName: !Ref StageName
+      MethodSettings:
+        - ResourcePath: /
+          HttpMethod: GET
+          LoggingLevel: INFO
+          DataTraceEnabled: true
+          MetricsEnabled: true
+          ThrottlingBurstLimit: 200
+          ThrottlingRateLimit: 100
+      Auth:
+        ApiKeyRequired: true
+        DefaultAuthorizer: BasicRequestAuth
+        Authorizers:
+          BasicRequestAuth:
+            FunctionPayloadType: REQUEST
+            FunctionArn: !GetAtt authentication.Arn
+            Identity:
+              Headers:
+                - Authorization
 
-  # ServerlessHttpApi:
-  #   Type: AWS::Serverless::Api
-  #   Properties:
-  #     Name: !Join ["", [{ "Ref": "AWS::StackName" }, "-http-api"]]
-  #     StageName: !Ref StageName
-  #     CacheClusterEnabled: true
-  #     CacheClusterSize: '0.5'
-  #     # Tags:
-  #     #   Tag: Value
-  #     # AccessLogSettings:
-  #     #   DestinationArn: !GetAtt AccessLogsGroup.Arn
-  #     #   Format: '{"requestTime":"$context.requestTime","requestId":"$context.requestId","httpMethod":"$context.httpMethod","path":"$context.path","routeKey":"$context.routeKey","status":$context.status,"responseLatency":$context.responseLatency}'
-  #     MethodSettings:
-  #       - ResourcePath: /
-  #         HttpMethod: GET
-  #         CachingEnabled: true
-  #         CacheTtlInSeconds: 300
-  #     # DefaultRouteSettings:
-  #     #   ThrottlingBurstLimit: 100
-  #     # RouteSettings:
-  #     #   "GET /":
-  #     #     ThrottlingBurstLimit: 100 # overridden in HttpApi Event
-  #     # StageVariables:
-  #     #   StageVar: Value
-  #     FailOnWarnings: true
-  #     # Auth:
-  #     #   DefaultAuthorizer: MyLambdaRequestAuthorizer
-  #     #   Authorizers:
-  #     #     MyLambdaRequestAuthorizer:
-  #     #       FunctionPayloadType: REQUEST
-  #     #       FunctionArn: !GetAtt authentication.Arn
-  #     #       Identity:
-  #     #         QueryStrings:
-  #     #           - Authorization
-  #     #       # FunctionInvokeRole: !GetAtt AuthRole.Arn
-  #     #       # FunctionInvokeRole: !GetAtt authenticationRole.Arn
-  #     #       # Identity:
-  #     #       #   Headers:
-  #     #       #     - Authorization
-  #     #       # AuthorizerPayloadFormatVersion: 2.0
-  #     #       # EnableSimpleResponses: true
-
-  # https://docs.aws.amazon.com/lambda/latest/dg/lambda-intro-execution-role.html
-  # AuthRole:
-  #   Type: AWS::IAM::Role
-  #   Properties:
-  #     AssumeRolePolicyDocument:
-  #       Version: "2012-10-17"
-  #       Statement:
-  #         - Effect: Allow
-  #           Principal:
-  #             Service:
-  #               # - ec2.amazonaws.com
-  #               - lambda.amazonaws.com
-  #           Action:
-  #             - 'sts:AssumeRole'
-  #     # AssumeRolePolicyDocument: Json
-  #     # Description: String
-  #     # ManagedPolicyArns: 
-  #     #   - String
-  #     # MaxSessionDuration: Integer
-  #     # Path: String
-  #     # PermissionsBoundary: String
-  #     Policies: 
-  #       # - Policy
-  #       - PolicyName: root
-  #         PolicyDocument:
-  #           Version: "2012-10-17"
-  #           Statement:
-  #             - Effect: Allow
-  #               Action: execute-api:Invoke
-  #               Resource: !Sub "arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:${HttpApi}/${StageName}/*"
-  #             - Effect: Allow
-  #               Action: lambda:InvokeFunction
-  #               Resource: !GetAtt authentication.Arn
-  #     RoleName: String
-  #     # Tags: 
-  #     #   - Value
-
-  # TestStage:
-  #   Type: AWS::ApiGateway::Stage
-  #   Properties:
-  #     StageName: test
-  #     RestApiId: !Ref ServerlessHttpApi
-  #     # DeploymentId: !Ref Deployment
-  #     Description: "test stage description"
-  #     MethodSettings:
-  #       - ResourcePath: "/*"
-  #         HttpMethod: "*"
-  #         LoggingLevel: INFO
-  #     AccessLogSetting:
-  #       DestinationArn: !GetAtt MyLogGroup.Arn
-  #       Format: $context.extendedRequestId $context.identity.sourceIp $context.identity.caller $context.identity.user [$context.requestTime] "$context.httpMethod $context.resourcePath $context.protocol" $context.status $context.responseLength $context.requestId
-  # MyLogGroup:
-  #   Type: AWS::Logs::LogGroup
-  #   Properties:
-  #     LogGroupName: !Join
-  #       - '-'
-  #       - - !Ref ServerlessHttpApi
-  #         - access-logs
-
-  # AccessLogsGroup:
-  #   Type: AWS::Logs::LogGroup
-
-  Table:
-    Type: AWS::DynamoDB::Table
+  # Lambda Token Authorizer
+  ServerlessAuthorizersLambdaToken:
+    Type: AWS::ApiGateway::Authorizer
     Properties:
-      AttributeDefinitions:
-        - AttributeName: id
-          AttributeType: S
-      BillingMode: PAY_PER_REQUEST
-      KeySchema:
-        - AttributeName: id
-          KeyType: HASH
-      StreamSpecification:
-        StreamViewType: NEW_AND_OLD_IMAGES
+      Name: LambdaAuthorizerToken
+      Type: REQUEST
+      RestApiId: !Ref ServerlessHttpApi
+      IdentitySource: method.request.header.Authorization
+      AuthorizerResultTtlInSeconds: 400
+      AuthorizerUri: !Join ['', ['arn:aws:apigateway:', !Ref AWS::Region, ':lambda:path/2015-03-31/functions/', !GetAtt authentication.Arn, '/invocations']]
+
+  ServerlessDeployment:
+    Type: AWS::ApiGateway::Deployment
+    Properties:
+      RestApiId: !Ref ServerlessHttpApi
 
 Outputs:
   HttpApiUrl:
     Description: URL of your API endpoint
+    # Value: !Sub https://${api}.execute-api.${AWS::Region}.amazonaws.com/${stage}
     Value:
       Fn::Sub: "https://${ServerlessHttpApi}.execute-api.${AWS::Region}.${AWS::URLSuffix}/${StageName}"
   HttpApiId:
