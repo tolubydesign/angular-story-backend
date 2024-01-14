@@ -11,6 +11,6 @@ Return string id
 */
 func GetRequestHeaderId(c *fiber.Ctx) string {
 	headers := c.GetReqHeaders()
-	id := headers["Id"]
+	id := headers["Id"][0]
 	return id
 }

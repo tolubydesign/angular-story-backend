@@ -286,7 +286,7 @@ func GetStoryFromRequestContext(ctx *fiber.Ctx) (models.DynamoStoryDatabaseStruc
 func GetRequestHeaderID(ctx *fiber.Ctx) (string, error) {
 	var id string
 	headers := ctx.GetReqHeaders()
-	id = headers["Id"]
+	id = headers["Id"][0]
 
 	err := utils.ValidateLimitedStringVariable(id)
 	if err != nil {
@@ -300,7 +300,7 @@ func GetRequestHeaderID(ctx *fiber.Ctx) (string, error) {
 func GetRequestHeader(ctx *fiber.Ctx, name string) string {
 	var header string
 	headers := ctx.GetReqHeaders()
-	header = headers[name]
+	header = headers[name][0]
 	return header
 }
 

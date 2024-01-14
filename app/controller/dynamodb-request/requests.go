@@ -179,7 +179,7 @@ func GetStoryByIdRequest(ctx *fiber.Ctx, client *dynamodb.Client) error {
 	}
 
 	headers := ctx.GetReqHeaders()
-	storyId := headers["Id"]
+	storyId := headers["Id"][0]
 
 	fmt.Println("Story id", storyId)
 	if (len(storyId) < 6) || (storyId == "") {
