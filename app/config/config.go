@@ -124,3 +124,43 @@ func GetConfiguration() (*Config, error) {
 
 	return configurationSingleton, nil
 }
+
+// Generate a custom configuration object based on variables passed.
+// This function does not effect the configuration singleton
+func GenerateConfiguration(config *Config) *Config {
+	var generatedConfiguration *Config
+	port := config.Configuration.Port
+	environment := config.Configuration.Environment
+	secret := config.Configuration.JWTSecretKey
+	aws := AWSConfiguration{
+		AccessKeyID:     config.Configuration.AWS.AccessKeyID,
+		SecretAccessKey: config.Configuration.AWS.SecretAccessKey,
+		SessionToken:    config.Configuration.AWS.SessionToken,
+		Region:          config.Configuration.AWS.Region,
+		AccountID:       config.Configuration.AWS.AccountID,
+	}
+	dynamodbConfiguration := DynamodbConfiguration{
+		StoryTableName: config.Configuration.Dynamodb.StoryTableName,
+		UserTableName:  config.Configuration.Dynamodb.UserTableName,
+	}
+	redisConfiguration := RedisConfiguration{
+		User:     config.Configuration.Redis.User,
+		Host:     config.Configuration.Redis.Host,
+		Port:     config.Configuration.Redis.Port,
+		Password: config.Configuration.Redis.Password,
+		Database: config.Configuration.Redis.Database,
+	}
+	generatedConfiguration = &Config{
+		Configuration: &DatabaseConfig{
+			Environment:  environment,
+			Port:         port,
+			Charset:      "utf8",
+			Redis:        redisConfiguration,
+			Dynamodb:     dynamodbConfiguration,
+			JWTSecretKey: []byte(secret),
+			AWS:          aws,
+		},
+	}
+
+	return generatedConfiguration
+}

@@ -13,6 +13,25 @@ Parameters:
     Type: String
     Description: Environmental api key variable
     Default: serverlessgodemoapikey
+  RemoteStoryTableName:
+    Type: String
+    Default: nothing
+    Description: (Required) The name of existing DynamoDB
+    MinLength: 3
+    MaxLength: 50
+    # AllowedValues:
+    #   - name
+    #   - name
+    AllowedPattern: ^[A-Za-z_-]+$
+    ConstraintDescription: "Story Dynamodb Table Name Required. Can be characters, hyphen, and underscore only. No numbers or special characters allowed."
+  RemoteUserTableName:
+    Type: String
+    Default: nothing
+    Description: (Required) The name of existing DynamoDB
+    MinLength: 3
+    MaxLength: 50
+    AllowedPattern: ^[A-Za-z_-]+$
+    ConstraintDescription: "User Dynamodb Table Name Required. Can be characters, hyphen, and underscore only. No numbers or special characters allowed."
 
 Globals:
   Function:
@@ -65,6 +84,8 @@ Resources:
       Policies:
         - AWSLambdaBasicExecutionRole
         - CloudWatchPutMetricPolicy: {}
+        - DynamoDBCrudPolicy:
+            TableName: !Ref RemoteStoryTableName
       Events:
         GetApiEvent:
           Type: Api
@@ -129,10 +150,49 @@ Resources:
     Properties:
       RestApiId: !Ref ServerlessHttpApi
 
+  # StoryDynamoDBTable:
+  #   Type: AWS::DynamoDB::Table
+  #   DeletionPolicy: Retain
+  #   Properties:
+  #     TableName: Story
+  #     AttributeDefinitions:
+  #       - AttributeName: id
+  #         AttributeType: S
+  #       - AttributeName: creator
+  #         AttributeType: S
+  #     KeySchema:
+  #       - AttributeName: id
+  #         KeyType: HASH
+  #       - AttributeName: creator
+  #         KeyType: RANGE
+  #     BillingMode: PAY_PER_REQUEST
+  #     ProvisionedThroughput:
+  #       ReadCapacityUnits: 0
+  #       WriteCapacityUnits: 0
+
+  # UserDynamoDBTable:
+  #   Type: AWS::DynamoDB::Table
+  #   DeletionPolicy: Retain
+  #   Properties:
+  #     TableName: User
+  #     AttributeDefinitions:
+  #       - AttributeName: id
+  #         AttributeType: S
+  #       - AttributeName: email
+  #         AttributeType: S
+  #     KeySchema:
+  #       - AttributeName: id
+  #         KeyType: HASH
+  #       - AttributeName: email
+  #         KeyType: RANGE
+  #     BillingMode: PAY_PER_REQUEST
+  #     ProvisionedThroughput:
+  #       ReadCapacityUnits: 0
+  #       WriteCapacityUnits: 0
+
 Outputs:
   HttpApiUrl:
     Description: URL of your API endpoint
-    # Value: !Sub https://${api}.execute-api.${AWS::Region}.amazonaws.com/${stage}
     Value:
       Fn::Sub: "https://${ServerlessHttpApi}.execute-api.${AWS::Region}.${AWS::URLSuffix}/${StageName}"
   HttpApiId:

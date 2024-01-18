@@ -10,7 +10,6 @@ import (
 	"github.com/tolubydesign/angular-story-backend/app/controller"
 	"github.com/tolubydesign/angular-story-backend/app/database"
 	"github.com/tolubydesign/angular-story-backend/app/logging"
-	"github.com/tolubydesign/angular-story-backend/cdk"
 )
 
 func main() {

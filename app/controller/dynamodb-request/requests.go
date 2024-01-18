@@ -9,6 +9,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/dynamodb"
 	"github.com/gofiber/fiber/v2"
 	"github.com/tolubydesign/angular-story-backend/app/config"
+	configuration "github.com/tolubydesign/angular-story-backend/app/config"
 	database "github.com/tolubydesign/angular-story-backend/app/database"
 	helpers "github.com/tolubydesign/angular-story-backend/app/helpers"
 	"github.com/tolubydesign/angular-story-backend/app/logging"
@@ -53,8 +54,13 @@ func CreateNewTable(ctx *fiber.Ctx, client *dynamodb.Client) error {
 
 func GetAllDynamoDBTables(ctx *fiber.Ctx, client *dynamodb.Client) error {
 	fmt.Printf("Getting all tables within the dynamo database")
+	var err error
+	configuration, err := configuration.GetConfiguration()
+	if err != nil {
+		return fiber.NewError(fiber.StatusInternalServerError, error.Error(err))
+	}
 
-	tableName := "Story"
+	tableName := configuration.Configuration.Dynamodb.StoryTableName
 	table := query.TableBasics{
 		DynamoDbClient: client,
 		TableName:      tableName,
@@ -116,8 +122,13 @@ func ListAllStoriesRequest(ctx *fiber.Ctx, client *dynamodb.Client) error {
 	if client == nil {
 		return errors.New(helpers.DynamodbResponseMessages.NilClient)
 	}
+	configuration, err := config.GetConfiguration()
+	if err != nil {
+		// Return error to user
+		return fiber.NewError(fiber.StatusInternalServerError, error.Error(err))
+	}
 
-	tableName := "Story"
+	tableName := configuration.Configuration.Dynamodb.StoryTableName
 	table := query.TableBasics{
 		DynamoDbClient: client,
 		TableName:      tableName,
@@ -169,11 +180,15 @@ Get Story bases on id provided in request.
 Will error if no id header is found
 */
 func GetStoryByIdRequest(ctx *fiber.Ctx, client *dynamodb.Client) error {
-	// TODO: log event
-	fmt.Println("Get story by id request.")
-
 	var err error
 	var story *models.DynamoStoryResponseStruct
+	configuration, err := configuration.GetConfiguration()
+	if err != nil {
+		return fiber.NewError(fiber.StatusInternalServerError, err.Error())
+	}
+
+	// TODO: log event
+	fmt.Println("Get story by id request.")
 	if client == nil {
 		return fiber.NewError(fiber.StatusInternalServerError, helpers.DynamodbResponseMessages.NilClient)
 	}
@@ -190,7 +205,7 @@ func GetStoryByIdRequest(ctx *fiber.Ctx, client *dynamodb.Client) error {
 	}
 
 	// Setup table
-	tableName := "Story"
+	tableName := configuration.Configuration.Dynamodb.StoryTableName
 	table := query.TableBasics{
 		DynamoDbClient: client,
 		TableName:      tableName,

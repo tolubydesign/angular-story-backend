@@ -23,6 +23,9 @@ import (
 // the authorizer returns an HTTP 500 status code.
 // Note that token values are case-sensitive.
 
+// https://docs.aws.amazon.com/apigateway/latest/developerguide/api-gateway-lambda-authorizer-output.html
+// https://docs.aws.amazon.com/apigateway/latest/developerguide/http-api-lambda-authorizer.html
+
 var apiKey = os.Getenv("API_KEY")
 
 func init() {
@@ -84,8 +87,6 @@ func HandleRequest(ctx context.Context, request events.APIGatewayCustomAuthorize
 // 	if apiKey == "" {
 // 		return events.APIGatewayV2CustomAuthorizerSimpleResponse{}, errors.New("Invalid configuration")
 // 	}
-// 	// https://docs.aws.amazon.com/apigateway/latest/developerguide/api-gateway-lambda-authorizer-output.html
-// 	// https://docs.aws.amazon.com/apigateway/latest/developerguide/http-api-lambda-authorizer.html
 // 	context := map[string]interface{}{
 // 		"ctx":     ctx,
 // 		"request": request,

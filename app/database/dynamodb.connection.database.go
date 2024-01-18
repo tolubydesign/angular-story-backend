@@ -20,7 +20,9 @@ import (
 var dynamoSingleton *dynamodb.Client
 
 /*
-Connecting to dynamo db through terminal https://docs.aws.amazon.com/amazondynamodb/latest/developerguide/DynamoDBLocal.UsageNotes.html
+Connecting to dynamodb through terminal 
+
+https://docs.aws.amazon.com/amazondynamodb/latest/developerguide/DynamoDBLocal.UsageNotes.html
 */
 func CreateDynamoClient() (*dynamodb.Client, error) {
 	configuration, err := envConfig.GetConfiguration()
