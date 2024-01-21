@@ -2,18 +2,19 @@ package main
 
 import (
 	"context"
-	"fmt"
 	"log"
 	"os"
 
 	"github.com/aws/aws-lambda-go/events"
 	"github.com/aws/aws-lambda-go/lambda"
 	"github.com/aws/aws-sdk-go-v2/config"
+	"github.com/aws/aws-sdk-go-v2/service/dynamodb"
 	fiberadapter "github.com/awslabs/aws-lambda-go-api-proxy/fiber"
 	"github.com/gofiber/fiber/v2"
 
 	// "github.com/tolubydesign/angular-story-backend/app/helpers"
 	configuration "github.com/tolubydesign/angular-story-backend/app/config"
+	dynamodbrequest "github.com/tolubydesign/angular-story-backend/app/controller/dynamodb-request"
 	"github.com/tolubydesign/angular-story-backend/app/models"
 )
 
@@ -22,7 +23,7 @@ type MyEvent struct {
 }
 
 // env variables
-var apiKey = os.Getenv("API_KEY")
+var env = os.Getenv("ENV")
 var JWTSecretKey = os.Getenv("JWT_SECRET_KEY")
 var dynamodbStoryTableName = os.Getenv("DYNAMODB_STORY_TABLE_NAME")
 var dynamodbUserTableName = os.Getenv("DYNAMODB_USER_TABLE_NAME")
@@ -32,18 +33,20 @@ var region = os.Getenv("AWS_REGION")
 var accountID = os.Getenv("AWS_ACCOUNT_ID")
 var sessionToken = os.Getenv("AWS_SESSION_TOKEN")
 
-
 var fiberLambda *fiberadapter.FiberLambda
 var customConfig *configuration.Config
+var dynamodbClient *dynamodb.Client
+
+// Function related variables
 
 // resource https://blog.omeir.dev/building-a-serverless-rest-api-with-go-aws-lambda-and-api-gateway
 // Function runs before main()
 func init() {
 	customConfig = configuration.GenerateConfiguration(&configuration.Config{
 		Configuration: &configuration.DatabaseConfig{
-			Environment: "production",
-			Port:        "",
-			Charset:     "utf8",
+			Environment: env,
+			// Port:        "",
+			Charset: "utf8",
 			Redis: configuration.RedisConfiguration{
 				User:     "",
 				Host:     "",
@@ -66,18 +69,25 @@ func init() {
 		},
 	})
 
-	sdkConfig, err := config.LoadDefaultConfig(context.TODO())
+	cfg, err := config.LoadDefaultConfig(context.TODO(),
+		config.WithRegion(region),
+	)
+
 	if err != nil {
-		log.Fatal(err)
+		log.Printf("error: %s", err.Error())
+		return
+		// log.Fatal("unable to load SDK config, %v", err)
 	}
 
-	db = *dynamodb.NewFromConfig(sdkConfig)
+	dynamodbClient = dynamodb.NewFromConfig(cfg)
 }
 
 func main() {
+	if dynamodbClient == nil {
+		log.Fatal("Dynamodb Client is not connected.")
+	}
+
 	app := fiber.New()
-	// app.Get("/", handlers.HealthCheck)
-	// app.Get("/users", handlers.ReturnUsers)
 	app.Get("/", func(c *fiber.Ctx) error {
 		c.Response().StatusCode()
 		c.Response().Header.Add("Content-Type", "application/json")
@@ -87,25 +97,16 @@ func main() {
 		})
 	})
 
-	fmt.Printf("%s is %s. years old\n", os.Getenv("NAME"), os.Getenv("AGE"))
+	app.Get("/get-story", func(ctx *fiber.Ctx) error {
+		return dynamodbrequest.GetStoryByIdRequest(ctx, dynamodbClient, customConfig)
+	})
+
+	app.Get("/list-stories", func(ctx *fiber.Ctx) error {
+		return dynamodbrequest.ListAllStoriesRequest(ctx, dynamodbClient, customConfig)
+	})
 
 	fiberLambda = fiberadapter.New(app)
 	lambda.Start(Handler)
-	// lambda.Start(HandleRequest)
-	// if helpers.IsLambda() {
-	// 	fiberLambda = fiberadapter.New(app)
-	// 	lambda.Start(Handler)
-	// } else {
-	// 	app.Listen(":3000")
-	// }
-}
-
-func HandleRequest(ctx context.Context, event *MyEvent) (*string, error) {
-	if event == nil {
-		return nil, fmt.Errorf("received nil event")
-	}
-	message := fmt.Sprintf("Hello %s!", event.Name) + fmt.Sprintf("Successful Request Tolu!")
-	return &message, nil
 }
 
 func Handler(ctx context.Context, request events.APIGatewayProxyRequest) (events.APIGatewayProxyResponse, error) {

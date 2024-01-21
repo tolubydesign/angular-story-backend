@@ -45,7 +45,6 @@ func Event(d ...any) {
 	// Connect to Redis
 	singleton, err := database.GetRedisClientSingleton()
 	if err != nil {
-		// log.Println("TIMESTAMP:", time.Now().UTC(), " | LOG:ERROR | Redis Connection Error:", err.Error())
 		logBasicEvent(s)
 		return
 	}
@@ -60,11 +59,6 @@ func Event(d ...any) {
 		key := fmt.Sprintf("%s:%v", name, iteration)
 		context := context.Background()
 		t := time.Now()
-		// var oneWeek time.Duration = 7 * 24 * 60 * 60      // 1 week = 7 days = 7×(24 hours) = 7×(24×(60 minutes)) = 7×(24×(60×(60 seconds))).
-		// var duration time.Duration = 1000000000 * oneWeek // Equals 1000 Milliseconds. Equals 1 second
-		// if singleton == nil {
-		// 	return errors.New("Redis Client singleton is undefined")
-		// }
 
 		value := fmt.Sprintf("%v, %v", t.String(), d)
 		err = singleton.Set(context, key, value, time.Hour).Err()

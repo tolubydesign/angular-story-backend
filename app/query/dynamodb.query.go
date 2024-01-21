@@ -123,7 +123,7 @@ func (basics TableBasics) GetStoryById(id string) (*models.DynamoStoryResponseSt
 	expr, err := expression.NewBuilder().WithFilter(nameBuilder).Build()
 
 	if err != nil {
-		log.Printf("Couldn't build expressions for scan. Here's why: %v\n", err)
+		log.Printf("Couldn't build expressions for scan. Here's why: %v\n", err.Error())
 		return nil, err
 	} else {
 		response, err = basics.DynamoDbClient.Scan(context.TODO(), &dynamodb.ScanInput{

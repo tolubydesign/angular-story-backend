@@ -7,6 +7,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/dynamodb"
 	"github.com/gofiber/fiber/v2"
 	"github.com/tolubydesign/angular-story-backend/app/config"
+	configuration "github.com/tolubydesign/angular-story-backend/app/config"
 	"github.com/tolubydesign/angular-story-backend/app/helpers"
 	"github.com/tolubydesign/angular-story-backend/app/models"
 	"github.com/tolubydesign/angular-story-backend/app/mutation"
@@ -51,12 +52,7 @@ func UserVerification(client *dynamodb.Client, user models.DatabaseUserStruct) (
 	return token, err
 }
 
-func SignUpUser(c *fiber.Ctx, client *dynamodb.Client) error {
-	configuration, err := config.GetConfiguration()
-	if err != nil {
-		return err
-	}
-
+func SignUpUser(c *fiber.Ctx, client *dynamodb.Client, config *configuration.Config) error {
 	u, err := helpers.GetSignInInfoContext(c)
 	if err != nil {
 		return err
@@ -64,7 +60,7 @@ func SignUpUser(c *fiber.Ctx, client *dynamodb.Client) error {
 
 	table := mutation.TableBasics{
 		DynamoDbClient: client,
-		TableName:      configuration.Configuration.Dynamodb.UserTableName,
+		TableName:      config.Configuration.Dynamodb.UserTableName,
 	}
 
 	// Hash password
@@ -88,14 +84,9 @@ func SignUpUser(c *fiber.Ctx, client *dynamodb.Client) error {
 }
 
 // Make a DynamoDB request to
-func RequestDynamoDeleteStory(c *fiber.Ctx, client *dynamodb.Client) (string, *fiber.Error) {
+func RequestDynamoDeleteStory(c *fiber.Ctx, client *dynamodb.Client, config *configuration.Config) (string, *fiber.Error) {
 	var err error
-	configuration, err := config.GetConfiguration()
-	if err != nil {
-		return "", fiber.NewError(fiber.StatusBadRequest, err.Error())
-	}
-
-	id, err := helpers.GetRequestHeaderID(c)
+	id, err := utils.GetRequestHeaderID(c)
 	if err != nil {
 		return "", fiber.NewError(fiber.StatusBadRequest, err.Error())
 	}
@@ -114,7 +105,7 @@ func RequestDynamoDeleteStory(c *fiber.Ctx, client *dynamodb.Client) (string, *f
 
 	table := mutation.TableBasics{
 		DynamoDbClient: client,
-		TableName:      configuration.Configuration.Dynamodb.StoryTableName,
+		TableName:      config.Configuration.Dynamodb.StoryTableName,
 	}
 
 	story := models.DynamoStoryDatabaseStruct{
@@ -132,14 +123,13 @@ func RequestDynamoDeleteStory(c *fiber.Ctx, client *dynamodb.Client) (string, *f
 }
 
 // Make request to Dynamodb. Update a single story. Including title, description and content.
-func RequestDynamoUpdateStory(c *fiber.Ctx, client *dynamodb.Client) (models.DynamoStoryDatabaseStruct, *fiber.Error) {
+func RequestDynamoUpdateStory(c *fiber.Ctx, client *dynamodb.Client, config *config.Config) (models.DynamoStoryDatabaseStruct, *fiber.Error) {
 	var content models.DynamoStoryDatabaseStruct
 	var err error
-	configuration, err := config.GetConfiguration()
 
 	// Get story id
 	// TODO: move this value to request body
-	id, err := helpers.GetRequestHeaderID(c)
+	id, err := utils.GetRequestHeaderID(c)
 	if err != nil {
 		return content, fiber.NewError(fiber.StatusBadRequest, err.Error())
 	}
@@ -147,7 +137,7 @@ func RequestDynamoUpdateStory(c *fiber.Ctx, client *dynamodb.Client) (models.Dyn
 	// Verify that id provided is valid
 	v := utils.ValidUuid(id)
 	if v != true {
-		return content, fiber.NewError(fiber.StatusBadRequest, helpers.DynamodbResponseMessages.InvalidUUID)
+		return content, fiber.NewError(fiber.StatusBadRequest, helpers.ResponseMessages.InvalidUUID)
 	}
 
 	// Get id of owner of story
@@ -155,7 +145,7 @@ func RequestDynamoUpdateStory(c *fiber.Ctx, client *dynamodb.Client) (models.Dyn
 	creator := helpers.GetRequestHeader(c, "Creator")
 	validCreator := utils.ValidateString(creator)
 	if validCreator != nil {
-		return content, fiber.NewError(fiber.StatusBadRequest, helpers.DynamodbResponseMessages.InvalidCreatorID)
+		return content, fiber.NewError(fiber.StatusBadRequest, helpers.ResponseMessages.InvalidCreatorID)
 	}
 
 	// Get body context
@@ -167,7 +157,7 @@ func RequestDynamoUpdateStory(c *fiber.Ctx, client *dynamodb.Client) (models.Dyn
 
 	table := mutation.TableBasics{
 		DynamoDbClient: client,
-		TableName:      configuration.Configuration.Dynamodb.StoryTableName,
+		TableName:      config.Configuration.Dynamodb.StoryTableName,
 	}
 
 	story = models.DynamoStoryDatabaseStruct{
@@ -190,11 +180,11 @@ func RequestDynamoUpdateStory(c *fiber.Ctx, client *dynamodb.Client) (models.Dyn
 
 // Add a single story to database. 
 // 
-func AddStory(c *fiber.Ctx, client *dynamodb.Client) *fiber.Error {
-	configuration, err := config.GetConfiguration()
+func AddStory(c *fiber.Ctx, client *dynamodb.Client, config *configuration.Config) *fiber.Error {
+	// configuration, err := config.GetConfiguration()
 	table := mutation.TableBasics{
 		DynamoDbClient: client,
-		TableName:      configuration.Configuration.Dynamodb.StoryTableName,
+		TableName:      config.Configuration.Dynamodb.StoryTableName,
 	}
 
 	story, err := helpers.GetStoryFromRequestContext(c)

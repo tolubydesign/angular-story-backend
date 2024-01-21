@@ -8,7 +8,6 @@ import (
 
 	"github.com/aws/aws-sdk-go-v2/service/dynamodb"
 	"github.com/gofiber/fiber/v2"
-	"github.com/tolubydesign/angular-story-backend/app/config"
 	configuration "github.com/tolubydesign/angular-story-backend/app/config"
 	database "github.com/tolubydesign/angular-story-backend/app/database"
 	helpers "github.com/tolubydesign/angular-story-backend/app/helpers"
@@ -16,6 +15,7 @@ import (
 	models "github.com/tolubydesign/angular-story-backend/app/models"
 	mutation "github.com/tolubydesign/angular-story-backend/app/mutation"
 	query "github.com/tolubydesign/angular-story-backend/app/query"
+	"github.com/tolubydesign/angular-story-backend/app/utils"
 )
 
 // Get client connection to dynamodb.
@@ -52,15 +52,10 @@ func CreateNewTable(ctx *fiber.Ctx, client *dynamodb.Client) error {
 	})
 }
 
-func GetAllDynamoDBTables(ctx *fiber.Ctx, client *dynamodb.Client) error {
+func GetAllDynamoDBTables(ctx *fiber.Ctx, client *dynamodb.Client, c *configuration.Config) error {
 	fmt.Printf("Getting all tables within the dynamo database")
 	var err error
-	configuration, err := configuration.GetConfiguration()
-	if err != nil {
-		return fiber.NewError(fiber.StatusInternalServerError, error.Error(err))
-	}
-
-	tableName := configuration.Configuration.Dynamodb.StoryTableName
+	tableName := c.Configuration.Dynamodb.StoryTableName
 	table := query.TableBasics{
 		DynamoDbClient: client,
 		TableName:      tableName,
@@ -86,17 +81,13 @@ func GetAllDynamoDBTables(ctx *fiber.Ctx, client *dynamodb.Client) error {
 /*
 Generate false data to populate dynamodb database
 */
-func PopulateDynamoDatabase(ctx *fiber.Ctx, client *dynamodb.Client) error {
-	fmt.Println("Adding default data to the dynamo database")
-	configuration, err := config.GetConfiguration()
-	if err != nil {
-		// Return error to user
-		return fiber.NewError(fiber.StatusInternalServerError, error.Error(err))
-	}
+func PopulateDynamoDatabase(ctx *fiber.Ctx, client *dynamodb.Client, c *configuration.Config) error {
+	logging.Event("Adding default data to the dynamo database")
+	var err error
 
 	table := mutation.TableBasics{
 		DynamoDbClient: client,
-		TableName:      configuration.Configuration.Dynamodb.StoryTableName,
+		TableName:      c.Configuration.Dynamodb.StoryTableName,
 	}
 
 	err = helpers.PopulateStoryDatabase(table)
@@ -118,24 +109,19 @@ List all stories within the database.
 
 - https://towardsdatascience.com/dynamodb-go-sdk-how-to-use-the-scan-and-batch-operations-efficiently-5b41988b4988
 */
-func ListAllStoriesRequest(ctx *fiber.Ctx, client *dynamodb.Client) error {
+func ListAllStoriesRequest(ctx *fiber.Ctx, client *dynamodb.Client, c *configuration.Config) error {
+	logging.Event("Getting all stories request.")
 	if client == nil {
-		return errors.New(helpers.DynamodbResponseMessages.NilClient)
-	}
-	configuration, err := config.GetConfiguration()
-	if err != nil {
-		// Return error to user
-		return fiber.NewError(fiber.StatusInternalServerError, error.Error(err))
+		return errors.New(helpers.ResponseMessages.NilClient)
 	}
 
-	tableName := configuration.Configuration.Dynamodb.StoryTableName
+	tableName := c.Configuration.Dynamodb.StoryTableName
 	table := query.TableBasics{
 		DynamoDbClient: client,
 		TableName:      tableName,
 	}
 
 	items, err := table.FullTableScan()
-
 	if err != nil {
 		// Return error to user
 		return fiber.NewError(fiber.StatusInternalServerError, error.Error(err))
@@ -155,15 +141,16 @@ func ListAllStoriesRequest(ctx *fiber.Ctx, client *dynamodb.Client) error {
 /*
 Add new story to dynamodb. Content for story is required
 */
-func AddStoryRequest(ctx *fiber.Ctx, client *dynamodb.Client) error {
-	log.Println("Adding Story request.")
+func AddStoryRequest(ctx *fiber.Ctx, client *dynamodb.Client, c *configuration.Config) error {
+	logging.Event("Adding Story request.")
+	var err error
 	if client == nil {
-		return fiber.NewError(fiber.StatusInternalServerError, helpers.DynamodbResponseMessages.NilClient)
+		return fiber.NewError(fiber.StatusInternalServerError, helpers.ResponseMessages.NilClient)
 	}
 
-	fiberError := AddStory(ctx, client)
-	if fiberError != nil {
-		return fiberError
+	err = AddStory(ctx, client, c)
+	if err != nil {
+		return err
 	}
 
 	ctx.Response().StatusCode()
@@ -179,33 +166,31 @@ Get Story bases on id provided in request.
 
 Will error if no id header is found
 */
-func GetStoryByIdRequest(ctx *fiber.Ctx, client *dynamodb.Client) error {
+func GetStoryByIdRequest(ctx *fiber.Ctx, client *dynamodb.Client, c *configuration.Config) error {
 	var err error
 	var story *models.DynamoStoryResponseStruct
-	configuration, err := configuration.GetConfiguration()
 	if err != nil {
 		return fiber.NewError(fiber.StatusInternalServerError, err.Error())
 	}
 
 	// TODO: log event
-	fmt.Println("Get story by id request.")
+	logging.Event("Get story by id request.")
 	if client == nil {
-		return fiber.NewError(fiber.StatusInternalServerError, helpers.DynamodbResponseMessages.NilClient)
+		return fiber.NewError(fiber.StatusInternalServerError, helpers.ResponseMessages.NilClient)
 	}
 
-	headers := ctx.GetReqHeaders()
-	storyId := headers["Id"][0]
+	storyId, err := utils.GetRequestHeaderID(ctx)
 
 	fmt.Println("Story id", storyId)
+	logging.Event("Captured story id in header", storyId)
 	if (len(storyId) < 6) || (storyId == "") {
-		// TODO: more descriptive response
 		ctx.Response().StatusCode()
 		ctx.Response().Header.Add("Content-Type", "application/json")
 		return fiber.NewError(fiber.StatusInternalServerError, "Invalid ID provided")
 	}
 
 	// Setup table
-	tableName := configuration.Configuration.Dynamodb.StoryTableName
+	tableName := c.Configuration.Dynamodb.StoryTableName
 	table := query.TableBasics{
 		DynamoDbClient: client,
 		TableName:      tableName,
@@ -233,13 +218,14 @@ Update story based on the story id and body context provided.
 If the user does not provide both id and context, with "title", "description" and "content" (in the request body),
 the request will return an error.
 */
-func UpdateDynamodbStoryRequest(ctx *fiber.Ctx, client *dynamodb.Client) error {
-	log.Println("Update dynamodb story request.")
+func UpdateDynamodbStoryRequest(ctx *fiber.Ctx, client *dynamodb.Client, c *configuration.Config) error {
+	logging.Event("Update dynamodb story request.")
 	if client == nil {
-		return errors.New(helpers.DynamodbResponseMessages.NilClient)
+		logging.Error("Client is null.")
+		return fiber.NewError(fiber.StatusInternalServerError, helpers.ResponseMessages.NilClient)
 	}
 
-	content, fiberError := RequestDynamoUpdateStory(ctx, client)
+	content, fiberError := RequestDynamoUpdateStory(ctx, client, c)
 	if fiberError != nil {
 		return fiberError
 	}
@@ -256,13 +242,13 @@ func UpdateDynamodbStoryRequest(ctx *fiber.Ctx, client *dynamodb.Client) error {
 /*
 Delete single story item in dynamo database.
 */
-func DeleteDynamodbStoryRequest(ctx *fiber.Ctx, client *dynamodb.Client) error {
+func DeleteDynamodbStoryRequest(ctx *fiber.Ctx, client *dynamodb.Client, c *configuration.Config) error {
 	log.Println("Delete dynamodb story request.")
 	if client == nil {
-		return errors.New(helpers.DynamodbResponseMessages.NilClient)
+		return errors.New(helpers.ResponseMessages.NilClient)
 	}
 
-	id, fiberError := RequestDynamoDeleteStory(ctx, client)
+	id, fiberError := RequestDynamoDeleteStory(ctx, client, c)
 	if fiberError != nil {
 		return fiberError
 	}
@@ -278,19 +264,15 @@ func DeleteDynamodbStoryRequest(ctx *fiber.Ctx, client *dynamodb.Client) error {
 /*
 List all users in dynamodb database
 */
-func ListAllUsersRequest(ctx *fiber.Ctx, client *dynamodb.Client) error {
+func ListAllUsersRequest(ctx *fiber.Ctx, client *dynamodb.Client, c *configuration.Config) error {
 	var userJson []models.User
-	configuration, err := config.GetConfiguration()
 	if client == nil {
-		return errors.New(helpers.DynamodbResponseMessages.NilClient)
-	}
-	if err != nil {
-		return fiber.NewError(fiber.StatusInternalServerError, err.Error())
+		return errors.New(helpers.ResponseMessages.NilClient)
 	}
 
 	table := query.TableBasics{
 		DynamoDbClient: client,
-		TableName:      configuration.Configuration.Dynamodb.UserTableName,
+		TableName:      c.Configuration.Dynamodb.UserTableName,
 	}
 
 	items, err := table.FullUserTableScan()
@@ -319,7 +301,7 @@ func ListAllUsersRequest(ctx *fiber.Ctx, client *dynamodb.Client) error {
 func UserLoginRequest(c *fiber.Ctx, client *dynamodb.Client) error {
 	var user models.DatabaseUserStruct
 	if client == nil {
-		return errors.New(helpers.DynamodbResponseMessages.NilClient)
+		return errors.New(helpers.ResponseMessages.NilClient)
 	}
 
 	// Get user login information. Email and password
@@ -343,12 +325,12 @@ func UserLoginRequest(c *fiber.Ctx, client *dynamodb.Client) error {
 }
 
 // Sign Up user to database
-func UserSignUpRequest(c *fiber.Ctx, client *dynamodb.Client) error {
+func UserSignUpRequest(c *fiber.Ctx, client *dynamodb.Client, config *configuration.Config) error {
 	if client == nil {
-		return errors.New(helpers.DynamodbResponseMessages.NilClient)
+		return errors.New(helpers.ResponseMessages.NilClient)
 	}
 
-	err := SignUpUser(c, client)
+	err := SignUpUser(c, client, config)
 	if err != nil {
 		return fiber.NewError(fiber.StatusInternalServerError, err.Error())
 	}
@@ -361,19 +343,14 @@ func UserSignUpRequest(c *fiber.Ctx, client *dynamodb.Client) error {
 	})
 }
 
-func HealthCheck(ctx *fiber.Ctx, client *dynamodb.Client) error {
+func HealthCheck(ctx *fiber.Ctx, client *dynamodb.Client, c *configuration.Config) error {
 	var response models.HTTPResponse
 	if client == nil {
-		return errors.New(helpers.DynamodbResponseMessages.NilClient)
+		return errors.New(helpers.ResponseMessages.NilClient)
 	}
 
 	logging.Event("Performing health check on dynamodb.")
-	configuration, err := config.GetConfiguration()
-	if err != nil {
-		return fiber.NewError(fiber.StatusInternalServerError, err.Error())
-	}
-
-	tableName := configuration.Configuration.Dynamodb.StoryTableName
+	tableName := c.Configuration.Dynamodb.StoryTableName
 	table := query.TableBasics{
 		DynamoDbClient: client,
 		TableName:      tableName,
