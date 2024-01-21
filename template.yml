@@ -13,25 +13,22 @@ Parameters:
     Type: String
     Description: Environmental api key variable
     Default: serverlessgodemoapikey
-  RemoteStoryTableName:
+  Env:
     Type: String
-    Default: nothing
-    Description: (Required) The name of existing DynamoDB
-    MinLength: 3
-    MaxLength: 50
-    # AllowedValues:
-    #   - name
-    #   - name
-    AllowedPattern: ^[A-Za-z_-]+$
-    ConstraintDescription: "Story Dynamodb Table Name Required. Can be characters, hyphen, and underscore only. No numbers or special characters allowed."
-  RemoteUserTableName:
+    Default: prod
+    Description: (Required) An environment name for function operations
+  JwtSecretKey:
     Type: String
-    Default: nothing
-    Description: (Required) The name of existing DynamoDB
-    MinLength: 3
-    MaxLength: 50
-    AllowedPattern: ^[A-Za-z_-]+$
-    ConstraintDescription: "User Dynamodb Table Name Required. Can be characters, hyphen, and underscore only. No numbers or special characters allowed."
+    Default: string
+    Description: (Required) JWT Secret key for keeping secrets
+  DynamodbStoryTableName:
+    Type: String
+    Default: string
+    Description: (Required) Remote DynamoDB Story table name
+  DynamodbUserTableName:
+    Type: String
+    Default: string
+    Description: (Required) Remote DynamoDB User table name
 
 Globals:
   Function:
@@ -85,7 +82,9 @@ Resources:
         - AWSLambdaBasicExecutionRole
         - CloudWatchPutMetricPolicy: {}
         - DynamoDBCrudPolicy:
-            TableName: !Ref RemoteStoryTableName
+            TableName: !Ref DynamodbStoryTableName
+        - DynamoDBCrudPolicy:
+            TableName: !Ref DynamodbUserTableName
       Events:
         GetApiEvent:
           Type: Api
@@ -97,6 +96,43 @@ Resources:
               - method.request.header.Authorization
             Auth:
               ApiKeyRequired: false
+        Ping:
+          Type: Api
+          Properties:
+            RestApiId: !Ref ServerlessHttpApi
+            Method: GET
+            Path: /ping
+            RequestParameters:
+              - method.request.header.Authorization
+            Auth:
+              ApiKeyRequired: false
+        GetAllStories:
+          Type: Api
+          Properties:
+            RestApiId: !Ref ServerlessHttpApi
+            Method: GET
+            Path: /list-stories
+            RequestParameters:
+              - method.request.header.Authorization
+            Auth:
+              ApiKeyRequired: false
+        GetStory:
+          Type: Api
+          Properties:
+            RestApiId: !Ref ServerlessHttpApi
+            Method: GET
+            Path: /get-story
+            RequestParameters:
+              - method.request.header.Authorization
+              - method.request.header.id
+            Auth:
+              ApiKeyRequired: false
+      Environment:
+        Variables:
+          DYNAMODB_STORY_TABLE_NAME: !Ref DynamodbStoryTableName
+          DYNAMODB_USER_TABLE_NAME: !Ref DynamodbUserTableName
+          ENV: !Ref Env
+          JWT_SECRET_KEY: !Ref JwtSecretKey
     Metadata:
       BuildMethod: makefile
   # Permission to allow Lambda invocation from API Gateway
@@ -143,7 +179,17 @@ Resources:
       RestApiId: !Ref ServerlessHttpApi
       IdentitySource: method.request.header.Authorization
       AuthorizerResultTtlInSeconds: 400
-      AuthorizerUri: !Join ['', ['arn:aws:apigateway:', !Ref AWS::Region, ':lambda:path/2015-03-31/functions/', !GetAtt authentication.Arn, '/invocations']]
+      AuthorizerUri:
+        !Join [
+          "",
+          [
+            "arn:aws:apigateway:",
+            !Ref AWS::Region,
+            ":lambda:path/2015-03-31/functions/",
+            !GetAtt authentication.Arn,
+            "/invocations",
+          ],
+        ]
 
   ServerlessDeployment:
     Type: AWS::ApiGateway::Deployment
