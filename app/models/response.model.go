@@ -27,3 +27,31 @@ type ResponseMessage struct {
 	InvalidUUID      string
 	InvalidCreatorID string
 }
+
+type APIEndPoints struct {
+	Post   PostEndpoint   `json:"post"`
+	Put    PutEndpoint    `json:"put"`
+	Get    GetEndpoint    `json:"get"`
+	Delete DeleteEndpoint `json:"delete"`
+}
+
+type GetEndpoint struct {
+	Story       string `json:"story"`
+	AllStories  string `json:"allStories"`
+	HealthCheck string `json:"healthCheck"`
+	Login       string `json:"login"`
+	AllUsers    string `json:"allUsers"`
+}
+
+type PostEndpoint struct {
+	Story            string `json:"story"`
+	PopulateDatabase string `json:"populateDatabase"` // Not for production
+}
+
+type PutEndpoint struct {
+	Story string `json:"story"`
+}
+
+type DeleteEndpoint struct {
+	Story string `json:"story"`
+}

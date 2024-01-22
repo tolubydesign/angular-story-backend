@@ -2,6 +2,7 @@ package utils
 
 import (
 	fiber "github.com/gofiber/fiber/v2"
+	"github.com/tolubydesign/angular-story-backend/app/models"
 )
 
 /*
@@ -28,4 +29,24 @@ func GetRequestHeaderID(ctx *fiber.Ctx) (string, error) {
 	}
 
 	return id, err
+}
+
+var EndPoints = models.APIEndPoints{
+	Get: models.GetEndpoint{
+		Story: "/get-story",
+		AllStories: "/list-stories",
+		HealthCheck: "/health",
+		Login: "/login",
+		AllUsers: "/list-users",
+	},
+	Post: models.PostEndpoint{
+		Story: "/add-story",
+		PopulateDatabase: "/populate-database",
+	},
+	Put: models.PutEndpoint{
+		Story: "/update-story",
+	},
+	Delete: models.DeleteEndpoint{
+		Story: "/remove-story",
+	},
 }
