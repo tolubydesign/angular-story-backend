@@ -80,3 +80,28 @@ func PanicError(err error) {
 		panic(err)
 	}
 }
+
+type ResponseHandlerParameters struct {
+	Context *fiber.Ctx
+	Error   bool
+	Code    int
+	Message string
+	Data    interface{}
+}
+
+// Basic method to handle request responses
+func HandleResponse(context ResponseHandlerParameters) error {
+	c := context.Context
+	if c == nil {
+		return fiber.NewError(fiber.StatusInternalServerError, fmt.Sprint("Request context was not provided. Message: ", context.Message))
+	}
+
+	c.Response().StatusCode()
+	c.Set(fiber.HeaderContentType, fiber.MIMEApplicationJSON)
+	return c.Status(context.Code).JSON(models.HTTPResponse{
+		Error:   context.Error,
+		Code:    context.Code,
+		Message: context.Message,
+		Data:    context.Data,
+	})
+}

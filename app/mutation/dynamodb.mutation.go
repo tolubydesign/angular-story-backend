@@ -109,18 +109,18 @@ func DeleteDynamoDBTable(client *dynamodb.Client) error {
 
 // Add a story the DynamoDB table.
 func (basics TableBasics) AddStory(story models.DynamoStoryDatabaseStruct) error {
-	log.Println("Adding story to database.")
-
+	log.Println("Database interaction. Adding story to database")
 	item, err := attributevalue.MarshalMap(story)
 	if err != nil {
 		return err
 	}
-	_, err = basics.DynamoDbClient.PutItem(context.TODO(), &dynamodb.PutItemInput{
+	output, err := basics.DynamoDbClient.PutItem(context.TODO(), &dynamodb.PutItemInput{
 		TableName: aws.String(basics.TableName), Item: item,
 	})
 
+	log.Println("DynamoDB Client Output: ", output)
 	if err != nil {
-		log.Printf("Couldn't add item to table. Reasoning: %v\n", err)
+		log.Println("Couldn't add item to table. Reasoning: ", err.Error())
 		return err
 	}
 
@@ -228,13 +228,14 @@ func (basics TableBasics) DeleteStory(story models.DynamoStoryDatabaseStruct) er
 	_, err := basics.DynamoDbClient.DeleteItem(context.TODO(), &dynamodb.DeleteItemInput{
 		TableName: aws.String(basics.TableName),
 		Key: map[string]types.AttributeValue{
-			"id":    &types.AttributeValueMemberS{Value: story.Id},
-			"title": &types.AttributeValueMemberS{Value: story.Title},
+			"id":      &types.AttributeValueMemberS{Value: story.Id},
+			"creator": &types.AttributeValueMemberS{Value: story.Creator},
 		},
 	})
 
 	if err != nil {
-		log.Printf("Couldn't delete %v from the table. Here's why: %v\n", story.Title, err)
+		// log.Println("Couldn't delete id: ", story.Id, " creator: ", story.Creator)
+		log.Println("Couldn't delete id: ", story.Id, " reasoning: ", err.Error())
 	}
 
 	return err

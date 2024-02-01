@@ -10,10 +10,11 @@ import (
 	"github.com/gofiber/fiber/v2"
 	configuration "github.com/tolubydesign/angular-story-backend/app/config"
 	database "github.com/tolubydesign/angular-story-backend/app/database"
+	"github.com/tolubydesign/angular-story-backend/app/handler"
 	helpers "github.com/tolubydesign/angular-story-backend/app/helpers"
 	"github.com/tolubydesign/angular-story-backend/app/logging"
 	models "github.com/tolubydesign/angular-story-backend/app/models"
-	mutation "github.com/tolubydesign/angular-story-backend/app/mutation"
+	"github.com/tolubydesign/angular-story-backend/app/mutation"
 	query "github.com/tolubydesign/angular-story-backend/app/query"
 	"github.com/tolubydesign/angular-story-backend/app/utils"
 )
@@ -53,7 +54,7 @@ func CreateNewTable(ctx *fiber.Ctx, client *dynamodb.Client) error {
 }
 
 func GetAllDynamoDBTables(ctx *fiber.Ctx, client *dynamodb.Client, c *configuration.Config) error {
-	fmt.Printf("Getting all tables within the dynamo database")
+	log.Println("Getting all tables within the dynamo database")
 	var err error
 	tableName := c.Configuration.Dynamodb.StoryTableName
 	table := query.TableBasics{
@@ -123,8 +124,7 @@ func ListAllStoriesRequest(ctx *fiber.Ctx, client *dynamodb.Client, c *configura
 
 	items, err := table.FullTableScan()
 	if err != nil {
-		// Return error to user
-		return fiber.NewError(fiber.StatusInternalServerError, error.Error(err))
+		return fiber.NewError(fiber.StatusInternalServerError, err.Error())
 	}
 
 	response := models.HTTPResponse{
@@ -139,55 +139,79 @@ func ListAllStoriesRequest(ctx *fiber.Ctx, client *dynamodb.Client, c *configura
 }
 
 /*
-Add new story to dynamodb. Content for story is required
+REQUEST. Add new story to dynamodb. Content for story is required.
 */
 func AddStoryRequest(ctx *fiber.Ctx, client *dynamodb.Client, c *configuration.Config) error {
-	logging.Event("Adding Story request.")
+	logging.Event("[Enter]: Adding Story request")
 	var err error
 	if client == nil {
-		return fiber.NewError(fiber.StatusInternalServerError, helpers.ResponseMessages.NilClient)
+		return handler.HandleResponse(handler.ResponseHandlerParameters{
+			Context: ctx,
+			Error:   true,
+			Code:    fiber.StatusInternalServerError,
+			Message: helpers.ResponseMessages.NilClient,
+		})
 	}
 
-	err = AddStory(ctx, client, c)
+	id, err := AddStory(ctx, client, c)
 	if err != nil {
-		return err
+		return handler.HandleResponse(handler.ResponseHandlerParameters{
+			Context: ctx,
+			Error:   true,
+			Code:    fiber.StatusInternalServerError,
+			Message: err.Error(),
+		})
 	}
 
+	logging.Event("[Exit]: Adding Story request")
 	ctx.Response().StatusCode()
-	ctx.Response().Header.Add("Content-Type", "application/json")
-	return ctx.JSON(models.HTTPResponse{
+	return handler.HandleResponse(handler.ResponseHandlerParameters{
+		Context: ctx,
 		Code:    fiber.StatusOK,
-		Message: "Story added successfully",
+		Message: fmt.Sprint("Content added id: ", id),
 	})
 }
 
 /*
-Get Story bases on id provided in request.
+REQUEST Get Story bases on id provided in request.
 
 Will error if no id header is found
 */
 func GetStoryByIdRequest(ctx *fiber.Ctx, client *dynamodb.Client, c *configuration.Config) error {
 	var err error
 	var story *models.DynamoStoryResponseStruct
-	if err != nil {
-		return fiber.NewError(fiber.StatusInternalServerError, err.Error())
-	}
 
-	// TODO: log event
-	logging.Event("Get story by id request.")
+	logging.Event("[Enter] Getting Single Story")
 	if client == nil {
-		return fiber.NewError(fiber.StatusInternalServerError, helpers.ResponseMessages.NilClient)
+		return handler.HandleResponse(handler.ResponseHandlerParameters{
+			Context: ctx,
+			Error:   true,
+			Code:    fiber.StatusInternalServerError,
+			Message: helpers.ResponseMessages.NilClient,
+		})
 	}
 
 	storyId, err := utils.GetRequestHeaderID(ctx)
-
-	fmt.Println("Story id", storyId)
-	logging.Event("Captured story id in header", storyId)
 	if (len(storyId) < 6) || (storyId == "") {
-		ctx.Response().StatusCode()
-		ctx.Response().Header.Add("Content-Type", "application/json")
-		return fiber.NewError(fiber.StatusInternalServerError, "Invalid ID provided")
+		return handler.HandleResponse(handler.ResponseHandlerParameters{
+			Context: ctx,
+			Error:   true,
+			Code:    fiber.StatusBadRequest,
+			Message: err.Error(),
+		})
 	}
+
+	// Make sure that the provided id is valid
+	if (len(storyId) < 6) || (storyId == "") {
+		return handler.HandleResponse(handler.ResponseHandlerParameters{
+			Context: ctx,
+			Error:   true,
+			Code:    fiber.StatusBadRequest,
+			Message: "Invalid ID provided",
+		})
+	}
+
+	logging.Event("Found story: ", storyId)
 
 	// Setup table
 	tableName := c.Configuration.Dynamodb.StoryTableName
@@ -196,16 +220,30 @@ func GetStoryByIdRequest(ctx *fiber.Ctx, client *dynamodb.Client, c *configurati
 		TableName:      tableName,
 	}
 
-	// Get story id, provided in request
+	// Get story based on id provided in request
 	story, err = table.GetStoryById(storyId)
 	if err != nil {
-		// TODO: create better http response
-		return fiber.NewError(fiber.StatusInternalServerError, err.Error())
+		return handler.HandleResponse(handler.ResponseHandlerParameters{
+			Context: ctx,
+			Error:   true,
+			Code:    fiber.StatusInternalServerError,
+			Message: err.Error(),
+		})
 	}
 
-	ctx.Response().StatusCode()
-	ctx.Response().Header.Add("Content-Type", "application/json")
-	return ctx.JSON(models.HTTPResponse{
+	// For when the database was scanned but nothing was found
+	if story == nil {
+		return handler.HandleResponse(handler.ResponseHandlerParameters{
+			Context: ctx,
+			Error:   true,
+			Code:    fiber.StatusNotFound,
+			Message: "Not found",
+		})
+	}
+
+	logging.Event("[Exit] Getting Single Story")
+	return handler.HandleResponse(handler.ResponseHandlerParameters{
+		Context: ctx,
 		Code:    fiber.StatusOK,
 		Data:    story,
 		Message: "Request successfully",
@@ -225,7 +263,7 @@ func UpdateDynamodbStoryRequest(ctx *fiber.Ctx, client *dynamodb.Client, c *conf
 		return fiber.NewError(fiber.StatusInternalServerError, helpers.ResponseMessages.NilClient)
 	}
 
-	content, fiberError := RequestDynamoUpdateStory(ctx, client, c)
+	content, fiberError := DynamoUpdateStory(ctx, client, c)
 	if fiberError != nil {
 		return fiberError
 	}
@@ -241,23 +279,68 @@ func UpdateDynamodbStoryRequest(ctx *fiber.Ctx, client *dynamodb.Client, c *conf
 
 /*
 Delete single story item in dynamo database.
+
+Returning fiber error if issues occur
 */
 func DeleteDynamodbStoryRequest(ctx *fiber.Ctx, client *dynamodb.Client, c *configuration.Config) error {
-	log.Println("Delete dynamodb story request.")
+	logging.Event("[Enter] Delete dynamodb story request")
 	if client == nil {
-		return errors.New(helpers.ResponseMessages.NilClient)
+		return handler.HandleResponse(handler.ResponseHandlerParameters{
+			Context: ctx,
+			Error:   true,
+			Code:    fiber.StatusInternalServerError,
+			Message: helpers.ResponseMessages.NilClient,
+		})
+		// return fiber.NewError(fiber.StatusInternalServerError, helpers.ResponseMessages.NilClient)
 	}
 
-	id, fiberError := RequestDynamoDeleteStory(ctx, client, c)
-	if fiberError != nil {
-		return fiberError
+	id, err := utils.GetRequestHeaderID(ctx)
+	if err != nil {
+		return handler.HandleResponse(handler.ResponseHandlerParameters{
+			Context: ctx,
+			Error:   true,
+			Code:    fiber.StatusBadRequest,
+			Message: err.Error(),
+		})
+		// return fiber.NewError(fiber.StatusBadRequest, err.Error())
 	}
 
-	ctx.Response().StatusCode()
-	ctx.Response().Header.Add("Content-Type", "application/json")
-	return ctx.JSON(models.HTTPResponse{
+	creator := helpers.GetRequestHeader(ctx, "Creator")
+	log.Println("Delete dynamodb story request. creator ", creator)
+	if creator == "" {
+		return handler.HandleResponse(handler.ResponseHandlerParameters{
+			Context: ctx,
+			Error:   true,
+			Code:    fiber.StatusBadRequest,
+			Message: "Invalid request. Creator ID required",
+		})
+	}
+
+	// Verify that id is a valid uuid
+	v := utils.ValidUuid(id)
+	if v != true {
+		return handler.HandleResponse(handler.ResponseHandlerParameters{
+			Context: ctx,
+			Error:   true,
+			Code:    fiber.StatusBadRequest,
+			Message: "Invalid id provided",
+		})
+	}
+
+	id, err = DynamoDeleteStory(ctx, client, id, creator, c)
+	if err != nil {
+		return handler.HandleResponse(handler.ResponseHandlerParameters{
+			Context: ctx,
+			Error:   true,
+			Code:    fiber.StatusBadRequest,
+			Message: err.Error(),
+		})
+	}
+
+	return handler.HandleResponse(handler.ResponseHandlerParameters{
+		Context: ctx,
 		Code:    fiber.StatusOK,
-		Message: fmt.Sprintf("Request to delete story successful id:%s", id),
+		Message: fmt.Sprintf("Delete story id: %s", id),
 	})
 }
 

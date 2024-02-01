@@ -28,7 +28,7 @@ type ResponseMessage struct {
 	InvalidCreatorID string
 }
 
-type APIEndPoints struct {
+type APIEndpoints struct {
 	Post   PostEndpoint   `json:"post"`
 	Put    PutEndpoint    `json:"put"`
 	Get    GetEndpoint    `json:"get"`
@@ -40,12 +40,14 @@ type GetEndpoint struct {
 	AllStories  string `json:"allStories"`
 	HealthCheck string `json:"healthCheck"`
 	Login       string `json:"login"`
-	AllUsers    string `json:"allUsers"`
+	Users       string `json:"users"`
+	Tables      string `json:"tables"`
 }
 
 type PostEndpoint struct {
 	Story            string `json:"story"`
 	PopulateDatabase string `json:"populateDatabase"` // Not for production
+	SignUp           string `json:"signUp"`
 }
 
 type PutEndpoint struct {

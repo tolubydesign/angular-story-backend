@@ -4,7 +4,6 @@ import (
 	"context"
 	"encoding/json"
 	"errors"
-	"fmt"
 	"log"
 	"time"
 
@@ -27,7 +26,7 @@ Add dummy data to Dynamo database
 func PopulateStoryDatabase(table mutation.TableBasics) error {
 	var err error
 	// Log actions
-	fmt.Println("Populating database with stories.")
+	log.Println("Populating database with stories.")
 
 	// Upload stories
 	err = table.AddStory(models.DynamoStoryDatabaseStruct{
@@ -257,17 +256,25 @@ func GetStoryFromRequestContext(ctx *fiber.Ctx) (models.DynamoStoryDatabaseStruc
 	byteBody := ctx.Body()
 
 	// Convert Struct to JSON
-	json.Unmarshal(byteBody, &body)
+	err = json.Unmarshal(byteBody, &body)
 	// json, err := json.Marshal(body.Content)
 	if err != nil {
 		return story, err
 	}
 
+	if (body.Description == "") || (body.Title == "") {
+		return story, errors.New("Invalid inputs provided for creating a new story")
+	}
+
 	// TODO: validate creator as uuid
 	// Check if there is a creator id && undefined creator string value
 	// If body.creator is undefined or nil, set to "default"
-	if (body.Creator == "") || (body.Content == nil) {
+	if body.Creator == "" {
 		body.Creator = "default"
+	}
+
+	if body.Content == nil {
+		body.Content = &models.StoryContent{}
 	}
 
 	// TODO: verify content structure of body json provided

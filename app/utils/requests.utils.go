@@ -31,17 +31,26 @@ func GetRequestHeaderID(ctx *fiber.Ctx) (string, error) {
 	return id, err
 }
 
-var EndPoints = models.APIEndPoints{
+const (
+	GetRequestEndpoint_Story       = "/story"
+	GetRequestEndpoint_AllStories  = "/stories"
+	GetRequestEndpoint_HealthCheck = "/health"
+)
+
+// A dictionary of Api endpoints available
+var Endpoints = models.APIEndpoints{
 	Get: models.GetEndpoint{
-		Story: "/get-story",
-		AllStories: "/list-stories",
+		Story:       "/get-story",
+		AllStories:  "/list-stories",
 		HealthCheck: "/health",
-		Login: "/login",
-		AllUsers: "/list-users",
+		Login:       "/login",
+		Users:       "/list-users",
+		Tables:      "/list-tables",
 	},
 	Post: models.PostEndpoint{
-		Story: "/add-story",
+		Story:            "/add-story",
 		PopulateDatabase: "/populate-database",
+		SignUp:           "/sign-up",
 	},
 	Put: models.PutEndpoint{
 		Story: "/update-story",

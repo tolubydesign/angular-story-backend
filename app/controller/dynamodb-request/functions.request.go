@@ -2,7 +2,10 @@ package dynamodbrequest
 
 import (
 	"errors"
+	// "fmt"
 	"log"
+
+	// "log"
 
 	"github.com/aws/aws-sdk-go-v2/service/dynamodb"
 	"github.com/gofiber/fiber/v2"
@@ -83,26 +86,9 @@ func SignUpUser(c *fiber.Ctx, client *dynamodb.Client, config *configuration.Con
 	return nil
 }
 
-// Make a DynamoDB request to
-func RequestDynamoDeleteStory(c *fiber.Ctx, client *dynamodb.Client, config *configuration.Config) (string, *fiber.Error) {
+// FUNCTION RELATED REQUEST. Make a DynamoDB request to
+func DynamoDeleteStory(c *fiber.Ctx, client *dynamodb.Client, id string, creator string, config *configuration.Config) (string, error) {
 	var err error
-	id, err := utils.GetRequestHeaderID(c)
-	if err != nil {
-		return "", fiber.NewError(fiber.StatusBadRequest, err.Error())
-	}
-
-	// Verify that id is a valid uuid
-	v := utils.ValidUuid(id)
-	if v != true {
-		return "", fiber.NewError(fiber.StatusBadRequest, "Invalid ID provided")
-	}
-
-	creator := helpers.GetRequestHeader(c, "Creator")
-	log.Println("Delete dynamodb story request. creator ", creator)
-	if creator == "" {
-		return id, fiber.NewError(fiber.StatusBadRequest, "Story Title not provided.")
-	}
-
 	table := mutation.TableBasics{
 		DynamoDbClient: client,
 		TableName:      config.Configuration.Dynamodb.StoryTableName,
@@ -116,14 +102,14 @@ func RequestDynamoDeleteStory(c *fiber.Ctx, client *dynamodb.Client, config *con
 	// Update story, in database, from content provided.
 	err = table.DeleteStory(story)
 	if err != nil {
-		return "", fiber.NewError(fiber.StatusBadRequest, err.Error())
+		return "", err
 	}
 
 	return id, nil
 }
 
-// Make request to Dynamodb. Update a single story. Including title, description and content.
-func RequestDynamoUpdateStory(c *fiber.Ctx, client *dynamodb.Client, config *config.Config) (models.DynamoStoryDatabaseStruct, *fiber.Error) {
+// FUNCTION RELATED REQUEST. Make request to Dynamodb. Update a single story. Including title, description and content.
+func DynamoUpdateStory(c *fiber.Ctx, client *dynamodb.Client, config *config.Config) (models.DynamoStoryDatabaseStruct, *fiber.Error) {
 	var content models.DynamoStoryDatabaseStruct
 	var err error
 
@@ -178,10 +164,12 @@ func RequestDynamoUpdateStory(c *fiber.Ctx, client *dynamodb.Client, config *con
 	return content, nil
 }
 
-// Add a single story to database. 
-// 
-func AddStory(c *fiber.Ctx, client *dynamodb.Client, config *configuration.Config) *fiber.Error {
-	// configuration, err := config.GetConfiguration()
+// FUNCTION RELATED REQUEST. Add a single story to database.
+// Return basic error is issues occur
+func AddStory(c *fiber.Ctx, client *dynamodb.Client, config *configuration.Config) (string, error) {
+	log.Println("Executing Adding Story function")
+	var id string
+
 	table := mutation.TableBasics{
 		DynamoDbClient: client,
 		TableName:      config.Configuration.Dynamodb.StoryTableName,
@@ -189,16 +177,17 @@ func AddStory(c *fiber.Ctx, client *dynamodb.Client, config *configuration.Confi
 
 	story, err := helpers.GetStoryFromRequestContext(c)
 	if err != nil {
-		return fiber.NewError(fiber.StatusInternalServerError, err.Error())
+		return id, err
 	}
 
 	// Generate new id for story
 	story.Id = helpers.GenerateStringUUID()
 	err = table.AddStory(story)
 	if err != nil {
-		// TODO: create better http response
-		return fiber.NewError(fiber.StatusInternalServerError, err.Error())
+		return id, err
 	}
 
-	return nil
+	id = story.Id
+	log.Println("Added story: ", story.Id)
+	return id, nil
 }

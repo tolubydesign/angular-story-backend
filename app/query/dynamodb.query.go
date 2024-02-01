@@ -147,7 +147,8 @@ func (basics TableBasics) GetStoryById(id string) (*models.DynamoStoryResponseSt
 	}
 
 	if len(stories) == 0 {
-		return nil, errors.New("No user found.")
+		// Not story matching id was found but there was no errors in the system
+		return nil, nil
 	}
 
 	return stories[0], nil

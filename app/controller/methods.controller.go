@@ -7,8 +7,9 @@ import (
 	"github.com/gofiber/fiber/v2/middleware/cors"
 
 	"github.com/aws/aws-sdk-go-v2/service/dynamodb"
-	"github.com/tolubydesign/angular-story-backend/app/controller/dynamodb-request"
 	"github.com/tolubydesign/angular-story-backend/app/config"
+	dynamodbrequest "github.com/tolubydesign/angular-story-backend/app/controller/dynamodb-request"
+	"github.com/tolubydesign/angular-story-backend/app/utils"
 )
 
 var client *dynamodb.Client
@@ -59,51 +60,62 @@ func SetupDynamoDBMethods(app *fiber.App, client *dynamodb.Client) {
 	}
 
 	// Data
-	app.Get("/list-tables", func(ctx *fiber.Ctx) error {
+	// "/list-tables"
+	app.Get(utils.Endpoints.Get.Tables, func(ctx *fiber.Ctx) error {
 		return dynamodbrequest.GetAllDynamoDBTables(ctx, client, configuration)
 	})
 
-	// TODO: [decision] should this be allowed, as a method
-	app.Post("/populate-database", func(ctx *fiber.Ctx) error {
-		return dynamodbrequest.PopulateDynamoDatabase(ctx, client, configuration)
-	})
+	// For local development
+	// "/populate-database"
+	// app.Post(utils.Endpoints.Post.PopulateDatabase, func(ctx *fiber.Ctx) error {
+	// 	return dynamodbrequest.PopulateDynamoDatabase(ctx, client, configuration)
+	// })
 
-	app.Post("/add-story", func(ctx *fiber.Ctx) error {
+	// "/add-story"
+	app.Post(utils.Endpoints.Post.Story, func(ctx *fiber.Ctx) error {
 		return dynamodbrequest.AddStoryRequest(ctx, client, configuration)
 	})
 
-	app.Get("/get-story", func(ctx *fiber.Ctx) error {
+	// "/get-story"
+	app.Get(utils.Endpoints.Get.Story, func(ctx *fiber.Ctx) error {
 		return dynamodbrequest.GetStoryByIdRequest(ctx, client, configuration)
 	})
 
-	app.Get("/list-stories", func(ctx *fiber.Ctx) error {
+	// "/list-stories"
+	app.Get(utils.Endpoints.Get.AllStories, func(ctx *fiber.Ctx) error {
 		return dynamodbrequest.ListAllStoriesRequest(ctx, client, configuration)
 	})
 
-	app.Put("/update-story", func(ctx *fiber.Ctx) error {
+	// "/update-story"
+	app.Put(utils.Endpoints.Put.Story, func(ctx *fiber.Ctx) error {
 		return dynamodbrequest.UpdateDynamodbStoryRequest(ctx, client, configuration)
 	})
 
-	app.Delete("/remove-story", func(ctx *fiber.Ctx) error {
+	// "/remove-story"
+	app.Delete(utils.Endpoints.Delete.Story, func(ctx *fiber.Ctx) error {
 		return dynamodbrequest.DeleteDynamodbStoryRequest(ctx, client, configuration)
 	})
 
 	// Users
-	app.Get("/list-users", func(ctx *fiber.Ctx) error {
+	// "/list-users"
+	app.Get(utils.Endpoints.Get.Users, func(ctx *fiber.Ctx) error {
 		return dynamodbrequest.ListAllUsersRequest(ctx, client, configuration)
 	})
 
 	// Users: login
-	app.Get("/login", func(c *fiber.Ctx) error {
+	// "/login"
+	app.Get(utils.Endpoints.Get.Login, func(c *fiber.Ctx) error {
 		return dynamodbrequest.UserLoginRequest(c, client)
 	})
 
-	app.Post("/sign-up", func(c *fiber.Ctx) error {
+	// "/sign-up"
+	app.Post(utils.Endpoints.Post.SignUp, func(c *fiber.Ctx) error {
 		return dynamodbrequest.UserSignUpRequest(c, client, configuration)
 	})
 
 	// Health check
-	app.Get("/health", func(ctx *fiber.Ctx) error {
+	// "/health"
+	app.Get(utils.Endpoints.Get.HealthCheck, func(ctx *fiber.Ctx) error {
 		return dynamodbrequest.HealthCheck(ctx, client, configuration)
 	})
 }
