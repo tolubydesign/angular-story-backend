@@ -14,6 +14,7 @@ import (
 
 	configuration "github.com/tolubydesign/angular-story-backend/app/config"
 	dynamodbrequest "github.com/tolubydesign/angular-story-backend/app/controller/dynamodb-request"
+	"github.com/tolubydesign/angular-story-backend/app/models"
 	"github.com/tolubydesign/angular-story-backend/app/utils"
 )
 
@@ -87,27 +88,32 @@ func main() {
 
 	app := fiber.New()
 
-	app.Get(utils.EndPoints.Get.Story, func(ctx *fiber.Ctx) error {
+	app.Get("/", func(c *fiber.Ctx) error {
+		c.Response().StatusCode()
+		c.Response().Header.Add("Content-Type", "application/json")
+		return c.JSON(models.HTTPResponse{
+			Code:    fiber.StatusOK,
+			Message: "lambda function accessible",
+		})
+	})
+
+	app.Get(utils.Endpoints.Get.Story, func(ctx *fiber.Ctx) error {
 		return dynamodbrequest.GetStoryByIdRequest(ctx, dynamodbClient, customConfig)
 	})
 
-	app.Get(utils.EndPoints.Get.AllStories, func(ctx *fiber.Ctx) error {
+	app.Get(utils.Endpoints.Get.AllStories, func(ctx *fiber.Ctx) error {
 		return dynamodbrequest.ListAllStoriesRequest(ctx, dynamodbClient, customConfig)
 	})
 
-	app.Post(utils.EndPoints.Post.Story, func(ctx *fiber.Ctx) error {
+	app.Post(utils.Endpoints.Post.Story, func(ctx *fiber.Ctx) error {
 		return dynamodbrequest.AddStoryRequest(ctx, dynamodbClient, customConfig)
 	})
 
-	app.Put(utils.EndPoints.Put.Story, func(ctx *fiber.Ctx) error {
+	app.Put(utils.Endpoints.Put.Story, func(ctx *fiber.Ctx) error {
 		return dynamodbrequest.UpdateDynamodbStoryRequest(ctx, dynamodbClient, customConfig)
 	})
 
-	app.Put(utils.EndPoints.Put.Story, func(ctx *fiber.Ctx) error {
-		return dynamodbrequest.UpdateDynamodbStoryRequest(ctx, dynamodbClient, customConfig)
-	})
-
-	app.Delete(utils.EndPoints.Delete.Story, func(ctx *fiber.Ctx) error {
+	app.Delete(utils.Endpoints.Delete.Story, func(ctx *fiber.Ctx) error {
 		return dynamodbrequest.DeleteDynamodbStoryRequest(ctx, dynamodbClient, customConfig)
 	})
 

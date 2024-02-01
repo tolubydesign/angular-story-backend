@@ -15,12 +15,12 @@ var fiberLambda *fiberadapter.FiberLambda
 
 func main() {
 	app := fiber.New()
-	app.Get("/", func(c *fiber.Ctx) error {
+	app.Get("/call", func(c *fiber.Ctx) error {
 		c.Response().StatusCode()
 		c.Response().Header.Add("Content-Type", "application/json")
 		return c.JSON(models.HTTPResponse{
 			Code:    fiber.StatusOK,
-			Message: "lambda function accessible",
+			Message: "lambda CALL function accessible",
 		})
 	})
 

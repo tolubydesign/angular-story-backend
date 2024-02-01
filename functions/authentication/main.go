@@ -39,9 +39,14 @@ func main() {
 func HandleRequest(ctx context.Context, request events.APIGatewayCustomAuthorizerRequestTypeRequest) (events.APIGatewayCustomAuthorizerResponse, error) {
 	token := request.Headers["Authorization"]
 	tokenSlice := strings.Split(token, " ")
+	var bearerString string
 	var bearerToken string
 	if len(tokenSlice) > 1 {
 		bearerToken = tokenSlice[len(tokenSlice)-1]
+		bearerString = tokenSlice[0]
+	}
+	if bearerString != "bearer" {
+		return events.APIGatewayCustomAuthorizerResponse{}, errors.New("Bearer authentication failure")
 	}
 	if bearerToken != apiKey {
 		return events.APIGatewayCustomAuthorizerResponse{}, errors.New("Authentication key provide is invalid")
@@ -142,6 +147,7 @@ func generatePolicy(principalID string, effect string, resource string) events.A
 		}
 	}
 
+	// TODO: modify context for production use
 	// Optional output with custom properties of the String, Number or Boolean type.
 	authResponse.Context = map[string]interface{}{
 		"resource": resource,

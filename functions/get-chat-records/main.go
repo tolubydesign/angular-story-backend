@@ -3,7 +3,7 @@ package functionsgochatrecords
 import (
 	"context"
 	// "encoding/json"
-	"fmt"
+	// "fmt"
 	"log"
 	"net/http"
 	"os"
@@ -48,7 +48,7 @@ type ChatInfo struct {
 	}
 */
 func handleRequest(ctx context.Context, request events.APIGatewayProxyRequest) (events.APIGatewayProxyResponse, error) {
-	fmt.Printf("QueryStringParameters: %+v", request.QueryStringParameters)
+	log.Println("QueryStringParameters: ", request.QueryStringParameters)
 
 	log.Printf("AWS_REGION: %s.\n", os.Getenv("AWS_REGION"))
 	log.Printf("DYNAMODB_TABLE: %s.\n", os.Getenv("DYNAMODB_TABLE"))
