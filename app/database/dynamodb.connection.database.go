@@ -3,7 +3,6 @@ package database
 import (
 	"context"
 	"errors"
-	"fmt"
 	"log"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
@@ -20,7 +19,7 @@ import (
 var dynamoSingleton *dynamodb.Client
 
 /*
-Connecting to dynamodb through terminal 
+Connecting to dynamodb through terminal
 
 https://docs.aws.amazon.com/amazondynamodb/latest/developerguide/DynamoDBLocal.UsageNotes.html
 */
@@ -121,7 +120,7 @@ func AddDummyData(singleton *dynamodb.Client) error {
 	}
 
 	if storyTableFound == false {
-		fmt.Println("Table '", storyTableName, "' table was not found. Attempting to create a new ", storyTableName, " table.")
+		log.Println("Table '", storyTableName, "' table was not found. Attempting to create a new ", storyTableName, " table.")
 		err = SetupStoryDatabase(singleton)
 	}
 
@@ -185,7 +184,7 @@ func SetupStoryDatabase(client *dynamodb.Client) error {
 	}
 
 	// Table structure
-	fmt.Println("Setting up Story Database structure")
+	log.Println("Setting up Story Database structure")
 	description, err := table.CreateDynamoDBTable(mutation.CreateTableStruct{
 		// Add attribute definition
 		AttributeDefinition: []types.AttributeDefinition{{
@@ -210,7 +209,7 @@ func SetupStoryDatabase(client *dynamodb.Client) error {
 		return err
 	}
 
-	fmt.Printf("\nInformation about newly created dynamodb table, %v", description)
+	log.Println("Information about newly created dynamodb table, ", description)
 	err = helpers.PopulateStoryDatabase(table)
 	if err != nil {
 		return err

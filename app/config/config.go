@@ -3,6 +3,7 @@ package config
 import (
 	"errors"
 	"fmt"
+	"log"
 	"os"
 
 	"github.com/joho/godotenv"
@@ -53,7 +54,7 @@ Returns Configuration or error, if issues occur.
 func BuildConfiguration() (*Config, error) {
 	envArg := os.Args[1]
 	environmentPath := fmt.Sprintf(".env.%s", envArg)
-	fmt.Println("environment: ", envArg, " | .env file: ", environmentPath)
+	log.Println("environment: ", envArg, " | .env file: ", environmentPath)
 
 	// Deny processing if environment argument isn't what we want
 	if (envArg == "development") || (envArg == "production") {

@@ -3,6 +3,7 @@ package logging
 import (
 	"context"
 	"fmt"
+	"log"
 	"time"
 
 	"github.com/redis/go-redis/v9"
@@ -138,13 +139,13 @@ func Warning(details ...any) {
 }
 
 func logIterationError(err error) {
-	fmt.Println("TIMESTAMP:", time.Now().UTC(), "| LOG:ERROR  | Failed to get Iteration:", err.Error())
+	log.Println("| LOG:ERROR  | Failed to get Iteration:", err.Error())
 }
 
 func logRedisSingletonSetError(err error) {
-	fmt.Println("TIMESTAMP:", time.Now().UTC(), " | LOG:ERROR | Redis Client Set Error:", err.Error())
+	log.Println("| LOG:ERROR | Redis Client Set Error:", err.Error())
 }
 
 func logBasicEvent(message string) {
-	fmt.Println("TIMESTAMP:", time.Now().UTC(), " | LOG:EVENT | Message:", message)
+	log.Println("| LOG:EVENT | Message:", message)
 }
