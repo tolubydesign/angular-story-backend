@@ -38,6 +38,33 @@ Globals:
     Runtime: go1.x
 
 Resources:
+  # REST API
+  ServerlessHttpApi:
+    Type: AWS::Serverless::Api
+    Properties:
+      Name: !Join ["", [{ "Ref": "AWS::StackName" }, "-rest-api"]]
+      Description: API Gateway using Lambda Authorizer and Mapping Template to inject customer HTTP headers with additional data.
+      StageName: !Ref StageName
+      MethodSettings:
+        - ResourcePath: "/*"
+          HttpMethod: "*"
+          LoggingLevel: INFO
+          DataTraceEnabled: true
+          MetricsEnabled: true
+          ThrottlingBurstLimit: 500
+          ThrottlingRateLimit: 100
+      # Auth:
+      #   ApiKeyRequired: false
+      #   DefaultAuthorizer: BasicRequestAuth
+      #   Authorizers:
+      #     BasicRequestAuth:
+      #       FunctionPayloadType: REQUEST
+      #       FunctionArn: !GetAtt authentication.Arn
+      #       Identity:
+      #         Headers:
+      #           - Authorization
+      #         # ReauthorizeEvery: 0
+
   # Authentication Function
   authentication:
     Type: AWS::Serverless::Function
@@ -81,58 +108,17 @@ Resources:
       Policies:
         - AWSLambdaBasicExecutionRole
         - CloudWatchPutMetricPolicy: {}
-        - DynamoDBCrudPolicy:
-            TableName: !Ref DynamodbStoryTableName
-        - DynamoDBCrudPolicy:
-            TableName: !Ref DynamodbUserTableName
       Events:
         GetApiEvent:
           Type: Api
           Properties:
             RestApiId: !Ref ServerlessHttpApi
             Method: GET
-            Path: /
-            RequestParameters:
-              - method.request.header.Authorization
-            Auth:
-              ApiKeyRequired: false
-        Ping:
-          Type: Api
-          Properties:
-            RestApiId: !Ref ServerlessHttpApi
-            Method: GET
-            Path: /ping
-            RequestParameters:
-              - method.request.header.Authorization
-            Auth:
-              ApiKeyRequired: false
-        GetAllStories:
-          Type: Api
-          Properties:
-            RestApiId: !Ref ServerlessHttpApi
-            Method: GET
-            Path: /list-stories
-            RequestParameters:
-              - method.request.header.Authorization
-            Auth:
-              ApiKeyRequired: false
-        GetStory:
-          Type: Api
-          Properties:
-            RestApiId: !Ref ServerlessHttpApi
-            Method: GET
-            Path: /get-story
-            RequestParameters:
-              - method.request.header.Authorization
-              - method.request.header.id
-            Auth:
-              ApiKeyRequired: false
-      Environment:
-        Variables:
-          DYNAMODB_STORY_TABLE_NAME: !Ref DynamodbStoryTableName
-          DYNAMODB_USER_TABLE_NAME: !Ref DynamodbUserTableName
-          ENV: !Ref Env
-          JWT_SECRET_KEY: !Ref JwtSecretKey
+            Path: /call
+            # RequestParameters:
+            #   - method.request.header.Authorization
+            # Auth:
+            #   ApiKeyRequired: false
     Metadata:
       BuildMethod: makefile
   # Permission to allow Lambda invocation from API Gateway
@@ -144,31 +130,111 @@ Resources:
       Principal: apigateway.amazonaws.com
       SourceArn: !Sub arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:${ServerlessHttpApi}/*/GET/
 
-  # REST API
-  ServerlessHttpApi:
-    Type: AWS::Serverless::Api
+  story:
+    Type: AWS::Serverless::Function
     Properties:
-      Name: !Join ["", [{ "Ref": "AWS::StackName" }, "-rest-api"]]
-      Description: API Gateway using Lambda Authorizer and Mapping Template to inject customer HTTP headers with additional data.
-      StageName: !Ref StageName
-      MethodSettings:
-        - ResourcePath: /
-          HttpMethod: GET
-          LoggingLevel: INFO
-          DataTraceEnabled: true
-          MetricsEnabled: true
-          ThrottlingBurstLimit: 200
-          ThrottlingRateLimit: 100
-      Auth:
-        ApiKeyRequired: true
-        DefaultAuthorizer: BasicRequestAuth
-        Authorizers:
-          BasicRequestAuth:
-            FunctionPayloadType: REQUEST
-            FunctionArn: !GetAtt authentication.Arn
-            Identity:
-              Headers:
-                - Authorization
+      FunctionName: !Join ["", [{ "Ref": "AWS::StackName" }, "-story-api-function"]]
+      Handler: bootstrap
+      CodeUri: .
+      Policies:
+        - AWSLambdaBasicExecutionRole
+        - CloudWatchPutMetricPolicy: {}
+        - DynamoDBCrudPolicy:
+            TableName: !Ref DynamodbStoryTableName
+        - DynamoDBCrudPolicy:
+            TableName: !Ref DynamodbUserTableName
+      Events:
+        Baseline:
+          Type: Api
+          Properties:
+            RestApiId: !Ref ServerlessHttpApi
+            Method: GET
+            Path: /
+            RequestParameters:
+              - method.request.header.Authorization
+            # Auth:
+            #   ApiKeyRequired: false
+        Health:
+          Type: Api
+          Properties:
+            RestApiId: !Ref ServerlessHttpApi
+            Method: GET
+            Path: /health
+            RequestParameters:
+              - method.request.header.Authorization
+            # Auth:
+            #   ApiKeyRequired: false
+        GetStory:
+          Type: Api
+          Properties:
+            RestApiId: !Ref ServerlessHttpApi
+            Method: GET
+            Path: /get-story
+            RequestParameters:
+              - method.request.header.Authorization
+              - method.request.header.id
+            # Auth:
+            #   ApiKeyRequired: false
+        AllStories:
+          Type: Api
+          Properties:
+            RestApiId: !Ref ServerlessHttpApi
+            Method: GET
+            Path: /list-stories
+            RequestParameters:
+              - method.request.header.Authorization
+            # Auth:
+            #   ApiKeyRequired: false
+        AddStory:
+          Type: Api
+          Properties:
+            RestApiId: !Ref ServerlessHttpApi
+            Method: POST
+            Path: /add-story
+            RequestParameters:
+              - method.request.header.Authorization
+            # Auth:
+            #   ApiKeyRequired: false
+        UpdateStory:
+          Type: Api
+          Properties:
+            RestApiId: !Ref ServerlessHttpApi
+            Method: PUT
+            Path: /update-story
+            RequestParameters:
+              - method.request.header.Authorization
+              - method.request.header.id
+              - method.request.header.creator
+            # Auth:
+            #   ApiKeyRequired: false
+        DeleteStory:
+          Type: Api
+          Properties:
+            RestApiId: !Ref ServerlessHttpApi
+            Method: DELETE
+            Path: /remove-story
+            RequestParameters:
+              - method.request.header.Authorization
+              - method.request.header.id
+              - method.request.header.creator
+            # Auth:
+            #   ApiKeyRequired: false
+      Environment:
+        Variables:
+          DYNAMODB_STORY_TABLE_NAME: !Ref DynamodbStoryTableName
+          DYNAMODB_USER_TABLE_NAME: !Ref DynamodbUserTableName
+          ENV: !Ref Env
+          JWT_SECRET_KEY: !Ref JwtSecretKey
+    Metadata:
+      BuildMethod: makefile
+  # Permission to allow Lambda invocation from API Gateway
+  storyPermission:
+    Type: AWS::Lambda::Permission
+    Properties:
+      FunctionName: !Ref story
+      Action: lambda:InvokeFunction
+      Principal: apigateway.amazonaws.com
+      SourceArn: !Sub arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:${ServerlessHttpApi}/*/GET/
 
   # Lambda Token Authorizer
   ServerlessAuthorizersLambdaToken:
@@ -178,7 +244,7 @@ Resources:
       Type: REQUEST
       RestApiId: !Ref ServerlessHttpApi
       IdentitySource: method.request.header.Authorization
-      AuthorizerResultTtlInSeconds: 400
+      AuthorizerResultTtlInSeconds: 0
       AuthorizerUri:
         !Join [
           "",
@@ -191,10 +257,10 @@ Resources:
           ],
         ]
 
-  ServerlessDeployment:
-    Type: AWS::ApiGateway::Deployment
-    Properties:
-      RestApiId: !Ref ServerlessHttpApi
+  # ServerlessDeployment:
+  #   Type: AWS::ApiGateway::Deployment
+  #   Properties:
+  #     RestApiId: !Ref ServerlessHttpApi
 
   # StoryDynamoDBTable:
   #   Type: AWS::DynamoDB::Table
