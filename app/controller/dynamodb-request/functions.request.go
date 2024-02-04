@@ -2,6 +2,7 @@ package dynamodbrequest
 
 import (
 	"errors"
+
 	// "fmt"
 	"log"
 
@@ -101,11 +102,7 @@ func DynamoDeleteStory(c *fiber.Ctx, client *dynamodb.Client, id string, creator
 
 	// Update story, in database, from content provided.
 	err = table.DeleteStory(story)
-	if err != nil {
-		return "", err
-	}
-
-	return id, nil
+	return id, err
 }
 
 // FUNCTION RELATED REQUEST. Make request to Dynamodb. Update a single story. Including title, description and content.

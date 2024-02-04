@@ -233,12 +233,17 @@ func (basics TableBasics) DeleteStory(story models.DynamoStoryDatabaseStruct) er
 		},
 	})
 
+	// [Knowledge] how to show print data in human readable json
+	// d, err := json.Marshal(output)
+	// log.Println("output: ", string(d))
+
 	if err != nil {
 		// log.Println("Couldn't delete id: ", story.Id, " creator: ", story.Creator)
 		log.Println("Couldn't delete id: ", story.Id, " reasoning: ", err.Error())
+		return err
 	}
 
-	return err
+	return nil
 }
 
 // GetKey returns the composite primary key of the movie in a format that can be

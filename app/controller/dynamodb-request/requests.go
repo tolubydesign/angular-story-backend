@@ -332,7 +332,7 @@ func DeleteDynamodbStoryRequest(ctx *fiber.Ctx, client *dynamodb.Client, c *conf
 		return handler.HandleResponse(handler.ResponseHandlerParameters{
 			Context: ctx,
 			Error:   true,
-			Code:    fiber.StatusBadRequest,
+			Code:    fiber.StatusInternalServerError,
 			Message: err.Error(),
 		})
 	}
